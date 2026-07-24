@@ -240,3 +240,64 @@ textarea { resize: vertical; min-height: 70px; }
   animation: toastin .2s ease; box-shadow: 0 6px 20px rgba(0,0,0,.4);
 }
 @keyframes toastin { from { opacity: 0; transform: translate(-50%, 8px);} to { opacity:1; transform: translateX(-50%);} }
+
+/* ---------- 省思 Reflect（沉浸式每日內省） ---------- */
+.rf-strip {
+  position: sticky; top: calc(var(--safe-t)); z-index: 10;
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  padding: 6px 0 10px; margin: 0 -16px 2px; padding-left: 16px; padding-right: 16px;
+  background: linear-gradient(to bottom, var(--bg) 62%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+.rf-strip::-webkit-scrollbar { display: none; }
+.rf-tab {
+  flex: 0 0 auto; background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-faint);
+  padding: 2px 2px 6px; position: relative; transition: color .15s;
+}
+.rf-tab.filled::after {
+  content: ''; position: absolute; top: 2px; right: -4px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent-2);
+}
+.rf-tab.on { color: var(--text); font-weight: 800; }
+
+.rf-datebar {
+  text-align: center; color: var(--text-faint); font-size: 12.5px;
+  letter-spacing: .3px; margin: 4px 0 20px;
+}
+
+.rf-list { display: flex; flex-direction: column; }
+.rf-aspect {
+  padding: 22px 0; border-bottom: 1px solid var(--line);
+  transition: opacity .18s ease;
+}
+.rf-aspect:last-child { border-bottom: none; }
+.rf-title {
+  font-size: 15px; font-weight: 700; color: var(--text-dim); margin-bottom: 10px;
+  transition: color .18s ease;
+}
+.rf-aspect.focus .rf-title { color: var(--text); }
+.rf-input {
+  width: 100%; box-sizing: border-box; background: none; border: none; outline: none;
+  resize: none; overflow: hidden; color: var(--text); font-family: inherit;
+  font-size: 17px; line-height: 1.7; padding: 0; min-height: 1.7em;
+}
+.rf-input::placeholder { color: var(--text-faint); }
+
+.rf-hist.on { border-color: var(--accent); }
+
+/* 管理面向 sheet */
+.rf-asp-row {
+  background: var(--bg-elev2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px; margin-bottom: 10px;
+}
+.rf-asp-top { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.rf-asp-title {
+  flex: 1; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px;
+  color: var(--text); font-family: inherit; font-size: 15px; font-weight: 700; padding: 8px 10px;
+}
+.rf-asp-prompt {
+  width: 100%; box-sizing: border-box; background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text-dim); font-family: inherit; font-size: 13px;
+  line-height: 1.5; padding: 8px 10px; resize: vertical;
+}
