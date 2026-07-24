@@ -266,23 +266,52 @@ textarea { resize: vertical; min-height: 70px; }
   letter-spacing: .3px; margin: 4px 0 20px;
 }
 
-.rf-list { display: flex; flex-direction: column; }
-.rf-aspect {
-  padding: 22px 0; border-bottom: 1px solid var(--line);
-  transition: opacity .18s ease;
+/* 文件式編輯器 */
+.rf-doc { display: flex; flex-direction: column; gap: 2px; }
+.rf-block { position: relative; }
+.rf-block.text { padding: 2px 0; }
+.rf-block .rf-del {
+  position: absolute; top: 4px; right: 0; background: none; border: none;
+  color: var(--text-faint); font-size: 13px; cursor: pointer;
+  opacity: 0; transition: opacity .15s; padding: 4px 6px;
 }
-.rf-aspect:last-child { border-bottom: none; }
-.rf-title {
-  font-size: 15px; font-weight: 700; color: var(--text-dim); margin-bottom: 10px;
-  transition: color .18s ease;
-}
-.rf-aspect.focus .rf-title { color: var(--text); }
-.rf-input {
+.rf-block:focus-within .rf-del, .rf-block:hover .rf-del { opacity: .7; }
+.rf-text {
   width: 100%; box-sizing: border-box; background: none; border: none; outline: none;
   resize: none; overflow: hidden; color: var(--text); font-family: inherit;
-  font-size: 17px; line-height: 1.7; padding: 0; min-height: 1.7em;
+  font-size: 17px; line-height: 1.75; padding: 6px 22px 6px 0; min-height: 1.75em;
 }
-.rf-input::placeholder { color: var(--text-faint); }
+.rf-text::placeholder { color: var(--text-faint); }
+
+/* 可互動的「省思格式」表格區塊 */
+.rf-block.reflect {
+  background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 14px; margin: 10px 0; overflow: hidden;
+}
+.rf-block-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: .4px;
+  color: var(--text-dim); background: var(--bg-elev2); border-bottom: 1px solid var(--line);
+}
+.rf-block-head .rf-del { position: static; opacity: .55; }
+.rf-table { display: flex; flex-direction: column; }
+.rf-row {
+  display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: start;
+  padding: 12px 14px; border-bottom: 1px solid var(--line); transition: background .15s;
+}
+.rf-row:last-child { border-bottom: none; }
+.rf-row:focus-within { background: rgba(255,90,60,.05); }
+.rf-row-topic { font-size: 14px; font-weight: 700; color: var(--text-dim); padding-top: 3px; }
+.rf-row:focus-within .rf-row-topic { color: var(--text); }
+.rf-cell {
+  width: 100%; box-sizing: border-box; background: none; border: none; outline: none;
+  resize: none; overflow: hidden; color: var(--text); font-family: inherit;
+  font-size: 15.5px; line-height: 1.6; padding: 1px 0; min-height: 1.6em;
+}
+.rf-cell::placeholder { color: var(--text-faint); }
+
+.rf-insert { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
+.rf-insert .chip { cursor: pointer; }
 
 .rf-hist.on { border-color: var(--accent); }
 

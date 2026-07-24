@@ -1401,14 +1401,30 @@ function sparkline(values, color = '#f5c451') {
 }
 
 /* ============================================================
-   省思 Reflect — 每日內省日記（沉浸式）
+   省思 Reflect — 每日書寫編輯器（自由文字 + 可插入的互動省思格式）
    ============================================================ */
-let _rfScrollHandler = null;      // 目前掛在 window 上的捲動監聽（切頁前移除）
+let _rfScrollHandler = null;      // 掛在 window 上的捲動監聽（同步頂部主題高亮）
 let _rfSaveTimer = null;
 
+function rfNewText() { return { id: 'b' + uid(), type: 'text', text: '' }; }
+function rfNewReflect() {
+  return {
+    id: 'b' + uid(), type: 'reflect',
+    rows: DB.reflect.aspects.map(a => ({ aspectId: a.id, title: a.title, prompt: a.prompt, text: '' })),
+  };
+}
+/* 把舊版 {notes:{aid:text}} 資料轉成一個「省思格式」區塊 */
+function rfMigrate(e) {
+  if (!e || e.blocks) return e;
+  const rows = DB.reflect.aspects.map(a => ({ aspectId: a.id, title: a.title, prompt: a.prompt, text: (e.notes && e.notes[a.id]) || '' }));
+  e.blocks = [{ id: 'b' + uid(), type: 'reflect', rows }];
+  delete e.notes;
+  return e;
+}
 function rfEntry(date, create) {
   let e = DB.reflect.entries.find(x => x.date === date);
-  if (!e && create) { e = { date, notes: {}, updated: Date.now() }; DB.reflect.entries.push(e); }
+  if (e) return rfMigrate(e);
+  if (create) { e = { date, blocks: [rfNewText()], updated: Date.now() }; DB.reflect.entries.push(e); }
   return e;
 }
 function rfSaveSoon() {
@@ -1416,17 +1432,26 @@ function rfSaveSoon() {
   _rfSaveTimer = setTimeout(saveDB, 400);
 }
 function rfFilledCount(e) {
-  if (!e) return 0;
-  return Object.values(e.notes || {}).filter(v => v && v.trim()).length;
+  if (!e || !e.blocks) return 0;
+  let n = 0;
+  e.blocks.forEach(b => {
+    if (b.type === 'text') { if (b.text && b.text.trim()) n++; }
+    else if (b.type === 'reflect') (b.rows || []).forEach(r => { if (r.text && r.text.trim()) n++; });
+  });
+  return n;
 }
 
 function renderReflect() {
   if (_rfScrollHandler) { window.removeEventListener('scroll', _rfScrollHandler); _rfScrollHandler = null; }
 
-  const aspects = DB.reflect.aspects;
-  const entry = rfEntry(REFLECT_DATE, false);
-  const notes = (entry && entry.notes) || {};
   const isToday = REFLECT_DATE === todayISO();
+  // 今天一開啟就給一個可立即打字的段落（未輸入前不會存檔，不留空白紀錄）
+  const entry = rfEntry(REFLECT_DATE, isToday);
+  const blocks = entry ? entry.blocks : [];
+
+  // 頂部主題：彙整文件裡所有「省思格式」區塊的列
+  const topics = [];
+  blocks.forEach(b => { if (b.type === 'reflect') (b.rows || []).forEach(r => topics.push({ id: `rfrow-${b.id}-${r.aspectId}`, title: r.title })); });
 
   const timeStr = entry && entry.updated
     ? new Date(entry.updated).toLocaleTimeString('zh-Hant', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -1434,30 +1459,29 @@ function renderReflect() {
   const dateLine = `${fmtDate(REFLECT_DATE)}${isToday ? ' · 今天' : ''}${timeStr ? ' · ' + timeStr : ''}`;
 
   const history = [...DB.reflect.entries]
-    .filter(e => rfFilledCount(e) > 0)
+    .filter(e => rfFilledCount(rfMigrate(e)) > 0)
     .sort((a, b) => b.date.localeCompare(a.date));
 
   view.innerHTML = `
-    <div class="page-head"><div><h1>省思</h1><div class="sub">每日內省 · 一次專注一個面向</div></div>
+    <div class="page-head"><div><h1>省思</h1><div class="sub">自由書寫 · 隨手插入省思格式</div></div>
       ${isToday ? '' : `<button class="btn ghost sm" id="rf-today">回到今天</button>`}</div>
 
-    <div class="rf-strip" id="rf-strip">
-      ${aspects.map(a => `<button class="rf-tab${(notes[a.id] || '').trim() ? ' filled' : ''}" data-aid="${a.id}">${esc(a.title)}</button>`).join('')}
-    </div>
+    ${topics.length ? `<div class="rf-strip" id="rf-strip">
+      ${topics.map(t => `<button class="rf-tab" data-target="${t.id}">${esc(t.title)}</button>`).join('')}
+    </div>` : ''}
 
     <div class="rf-datebar">${dateLine}</div>
 
-    <div class="rf-list" id="rf-list">
-      ${aspects.length ? aspects.map(a => `
-        <section class="rf-aspect" data-aid="${a.id}" id="rfa-${a.id}">
-          <div class="rf-title">${esc(a.title)}</div>
-          <textarea class="rf-input" data-aid="${a.id}" rows="1"
-            placeholder="${esc(a.prompt)}">${esc(notes[a.id] || '')}</textarea>
-        </section>`).join('')
-      : emptyBox('🪞', '還沒有任何面向', '點下方「管理面向」新增你想每天觀察的項目')}
+    <div class="rf-doc" id="rf-doc">
+      ${blocks.length ? blocks.map(renderBlock).join('')
+        : emptyBox('🪞', '空白的一天', '在下面開始打字，或插入省思格式')}
     </div>
 
-    <button class="btn ghost block sm" id="rf-manage" style="margin-top:18px">⚙︎ 管理面向</button>
+    <div class="rf-insert">
+      <button class="chip" id="ins-text">＋ 文字段落</button>
+      <button class="chip" id="ins-reflect">＋ 省思格式</button>
+      <button class="chip" id="ins-manage">⚙︎ 面向</button>
+    </div>
 
     ${history.length ? `
       <div class="section-title">歷史回顧</div>
@@ -1465,57 +1489,105 @@ function renderReflect() {
         <div class="li rf-hist${e.date === REFLECT_DATE ? ' on' : ''}" data-date="${e.date}">
           <div class="badge">🪞</div>
           <div class="grow"><b>${fmtDate(e.date)}</b>
-            <div class="faint" style="font-size:12px">${rfFilledCount(e)} 個面向 · ${esc(rfSnippet(e))}</div></div>
+            <div class="faint" style="font-size:12px">${rfFilledCount(e)} 則 · ${esc(rfSnippet(e))}</div></div>
           <button class="btn sm danger" data-rfdel="${e.date}">✕</button>
         </div>`).join('')}` : ''}
   `;
 
-  // 自動長高 + 即時儲存
-  const inputs = $$('.rf-input');
-  inputs.forEach(ta => {
+  // 自動長高 + 即時儲存（文字段落與省思格式的每一格）
+  $$('.rf-text, .rf-cell', view).forEach(ta => {
     autoGrowTA(ta);
     ta.addEventListener('input', () => {
       autoGrowTA(ta);
       const e = rfEntry(REFLECT_DATE, true);
-      e.notes[ta.dataset.aid] = ta.value;
+      const blk = e.blocks.find(b => b.id === ta.dataset.bid);
+      if (!blk) return;
+      if (blk.type === 'text') blk.text = ta.value;
+      else { const row = (blk.rows || []).find(r => r.aspectId === ta.dataset.aid); if (row) row.text = ta.value; }
       e.updated = Date.now();
       rfSaveSoon();
-      // 即時更新該面向 tab 的「已填」狀態
-      const tab = $(`.rf-tab[data-aid="${ta.dataset.aid}"]`);
-      if (tab) tab.classList.toggle('filled', !!ta.value.trim());
     });
-    ta.addEventListener('focus', () => rfFocusAspect(ta.dataset.aid, false));
   });
 
-  // 頂部面向 tab → 捲動到對應段落並聚焦
-  $$('.rf-tab').forEach(t => t.addEventListener('click', () => rfFocusAspect(t.dataset.aid, true)));
-
-  // 歷史：點擊回看，✕ 刪除
-  $$('.rf-hist').forEach(row => row.addEventListener('click', e => {
-    if (e.target.closest('[data-rfdel]')) return;
-    REFLECT_DATE = row.dataset.date; renderReflect();
-    window.scrollTo({ top: 0 });
+  // 頂部主題 → 捲到對應列並聚焦（點上方自動跳到下方編輯區）
+  $$('.rf-tab', view).forEach(t => t.addEventListener('click', () => {
+    const el = document.getElementById(t.dataset.target);
+    if (!el) return;
+    const y = window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.24;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    const ta = $('.rf-cell', el);
+    if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 320);
   }));
-  $$('[data-rfdel]').forEach(b => b.addEventListener('click', () => {
-    if (!confirm(`刪除 ${fmtDate(b.dataset.rfdel)} 這則省思？`)) return;
+
+  // 移除區塊
+  $$('[data-delblock]', view).forEach(b => b.addEventListener('click', () => {
+    const e = rfEntry(REFLECT_DATE, false); if (!e) return;
+    const blk = e.blocks.find(x => x.id === b.dataset.delblock);
+    const hasText = blk && (blk.type === 'text' ? blk.text.trim() : (blk.rows || []).some(r => r.text.trim()));
+    if (hasText && !confirm('這個區塊有內容，確定移除？')) return;
+    e.blocks = e.blocks.filter(x => x.id !== b.dataset.delblock);
+    e.updated = Date.now(); saveDB(); renderReflect();
+  }));
+
+  // 插入區塊
+  $('#ins-text', view).onclick = () => { const e = rfEntry(REFLECT_DATE, true); e.blocks.push(rfNewText()); e.updated = Date.now(); saveDB(); renderReflect(); rfFocusLast('.rf-text'); };
+  $('#ins-reflect', view).onclick = () => { const e = rfEntry(REFLECT_DATE, true); e.blocks.push(rfNewReflect()); e.updated = Date.now(); saveDB(); renderReflect(); rfFocusLast('.rf-block.reflect', true); };
+  $('#ins-manage', view).onclick = openReflectAspectSheet;
+
+  // 歷史：回看 / 刪除
+  $$('.rf-hist', view).forEach(row => row.addEventListener('click', e => {
+    if (e.target.closest('[data-rfdel]')) return;
+    REFLECT_DATE = row.dataset.date; renderReflect(); window.scrollTo({ top: 0 });
+  }));
+  $$('[data-rfdel]', view).forEach(b => b.addEventListener('click', () => {
+    if (!confirm(`刪除 ${fmtDate(b.dataset.rfdel)} 這則？`)) return;
     DB.reflect.entries = DB.reflect.entries.filter(e => e.date !== b.dataset.rfdel);
     if (REFLECT_DATE === b.dataset.rfdel) REFLECT_DATE = todayISO();
     saveDB(); renderReflect();
   }));
 
-  if (isToday) { /* 保持在今天 */ } else { $('#rf-today').onclick = () => { REFLECT_DATE = todayISO(); renderReflect(); window.scrollTo({ top: 0 }); }; }
-  $('#rf-manage').onclick = openReflectAspectSheet;
+  if (!isToday) $('#rf-today').onclick = () => { REFLECT_DATE = todayISO(); renderReflect(); window.scrollTo({ top: 0 }); };
 
-  // 沉浸式聚焦：跟隨捲動即時計算每個面向的透明度
-  _rfScrollHandler = () => rfUpdateFocus();
+  // 捲動時同步頂部主題高亮
+  _rfScrollHandler = () => rfSyncActiveChip();
   window.addEventListener('scroll', _rfScrollHandler, { passive: true });
-  requestAnimationFrame(rfUpdateFocus);
+  requestAnimationFrame(rfSyncActiveChip);
+}
+
+function renderBlock(b) {
+  if (b.type === 'text') {
+    return `<div class="rf-block text" data-bid="${b.id}">
+      <textarea class="rf-text" data-bid="${b.id}" rows="1" placeholder="寫點什麼…">${esc(b.text || '')}</textarea>
+      <button class="rf-del" data-delblock="${b.id}" title="刪除段落">✕</button>
+    </div>`;
+  }
+  return `<div class="rf-block reflect" data-bid="${b.id}">
+    <div class="rf-block-head"><span>🪞 每日省思</span><button class="rf-del" data-delblock="${b.id}" title="移除區塊">✕</button></div>
+    <div class="rf-table">
+      ${(b.rows || []).map(r => `
+        <div class="rf-row" id="rfrow-${b.id}-${r.aspectId}">
+          <div class="rf-row-topic">${esc(r.title)}</div>
+          <textarea class="rf-cell" data-bid="${b.id}" data-aid="${r.aspectId}" rows="1" placeholder="${esc(r.prompt || '')}">${esc(r.text || '')}</textarea>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function rfFocusLast(sel, scrollOnly) {
+  const els = $$(sel, view); const el = els[els.length - 1]; if (!el) return;
+  const y = window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.30;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  if (!scrollOnly) { const ta = el.matches('textarea') ? el : $('textarea', el); if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 320); }
 }
 
 function rfSnippet(e) {
-  const first = Object.values(e.notes || {}).find(v => v && v.trim()) || '';
-  const s = first.trim().replace(/\s+/g, ' ');
-  return s.length > 18 ? s.slice(0, 18) + '…' : s;
+  let s = '';
+  for (const b of (e.blocks || [])) {
+    if (b.type === 'text' && b.text && b.text.trim()) { s = b.text; break; }
+    if (b.type === 'reflect') { const r = (b.rows || []).find(r => r.text && r.text.trim()); if (r) { s = r.text; break; } }
+  }
+  s = s.trim().replace(/\s+/g, ' ');
+  return s.length > 20 ? s.slice(0, 20) + '…' : s;
 }
 
 function autoGrowTA(ta) {
@@ -1523,37 +1595,14 @@ function autoGrowTA(ta) {
   ta.style.height = ta.scrollHeight + 'px';
 }
 
-/* 依段落中心與螢幕焦點線的距離設定透明度，最靠近者為聚焦 */
-function rfUpdateFocus() {
+// 捲動時，讓最靠近焦點線的主題列對應的頂部 tab 高亮
+function rfSyncActiveChip() {
   if (CURRENT !== 'reflect') return;
-  const secs = $$('.rf-aspect');
-  if (!secs.length) return;
-  const focal = window.innerHeight * 0.40;   // 焦點線位置（偏上）
+  const rows = $$('.rf-row', view); if (!rows.length) return;
+  const focal = window.innerHeight * 0.32;
   let best = null, bestD = Infinity;
-  secs.forEach(s => {
-    const r = s.getBoundingClientRect();
-    const center = r.top + r.height / 2;
-    const d = Math.abs(center - focal);
-    const op = clamp(1 - d / (window.innerHeight * 0.55), 0.16, 1);
-    s.style.opacity = op.toFixed(3);
-    if (d < bestD) { bestD = d; best = s; }
-  });
-  secs.forEach(s => s.classList.toggle('focus', s === best));
-  if (best) {
-    const aid = best.dataset.aid;
-    $$('.rf-tab').forEach(t => t.classList.toggle('on', t.dataset.aid === aid));
-    // 讓聚焦的 tab 捲進頂部橫列可見範圍
-    const at = $(`.rf-tab.on`);
-    if (at && at.scrollIntoView) at.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }
-}
-
-function rfFocusAspect(aid, scrollTop) {
-  const el = $(`#rfa-${CSS.escape(aid)}`);
-  if (!el) return;
-  const y = window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.30;
-  window.scrollTo({ top: Math.max(0, y), behavior: scrollTop ? 'smooth' : 'auto' });
-  requestAnimationFrame(rfUpdateFocus);
+  rows.forEach(r => { const bb = r.getBoundingClientRect(); const c = bb.top + bb.height / 2; const d = Math.abs(c - focal); if (d < bestD) { bestD = d; best = r; } });
+  if (best) $$('.rf-tab', view).forEach(t => t.classList.toggle('on', t.dataset.target === best.id));
 }
 
 /* 管理面向：新增 / 改標題 / 改問題 / 刪除 */
