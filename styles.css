@@ -197,18 +197,35 @@ textarea { resize: vertical; min-height: 70px; }
 .tag.gold { color: var(--gold); background: rgba(245,196,81,.12); }
 .tag.accent { color: var(--accent); background: rgba(255,90,60,.12); }
 
-/* ---------- Timeline ---------- */
-.timeline { margin-top: 6px; }
-.tl-item { display: grid; grid-template-columns: 46px 20px 1fr; column-gap: 8px; }
-.tl-time { font-size: 13px; color: var(--text-dim); text-align: right; padding-top: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tl-mid { position: relative; }
-.tl-mid::before { content: ''; position: absolute; left: 50%; transform: translateX(-50%); top: 0; bottom: 0; width: 2px; background: var(--line); }
-.tl-item:first-child .tl-mid::before { top: 15px; }
-.tl-item:last-child .tl-mid::before { bottom: auto; height: 21px; }
-.tl-dot { position: absolute; left: 50%; top: 15px; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--bg); z-index: 1; }
-.tl-body { display: flex; align-items: center; gap: 8px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 10px 12px 14px; margin-bottom: 10px; cursor: pointer; transition: border-color .12s; }
-.tl-body:active { border-color: var(--accent); }
-.tl-body .grow { font-size: 15px; word-break: break-word; }
+/* ---------- Calendar (行事曆) ---------- */
+.cal-wrap { display: flex; gap: 10px; align-items: flex-start; }
+.cal-grid { position: relative; flex: 1; min-width: 0; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; }
+.cal-hourline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+.cal-hlabel { position: absolute; top: -7px; left: 6px; font-size: 10px; color: var(--text-faint); background: var(--bg-elev); padding: 0 3px; font-variant-numeric: tabular-nums; }
+.cal-now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--danger); z-index: 3; }
+.cal-now::before { content: ''; position: absolute; left: 0; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+.cal-ev {
+  position: absolute; left: 50px; right: 5px; background: linear-gradient(135deg, var(--accent), #ff7a52);
+  border-radius: 8px; padding: 3px 8px; color: #fff; overflow: hidden; z-index: 2;
+  box-shadow: 0 2px 8px rgba(255,90,60,.35); touch-action: none; cursor: grab; user-select: none;
+}
+.cal-ev:active { cursor: grabbing; filter: brightness(1.08); }
+.cal-ev-t { font-size: 10px; opacity: .92; line-height: 1.2; }
+.cal-ev-txt { font-size: 12.5px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-palette { width: 108px; flex-shrink: 0; position: sticky; top: 8px; align-self: flex-start; }
+.cal-pal-title { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 700; }
+.cal-goal {
+  background: var(--bg-elev2); border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 10px; font-size: 12px; margin-bottom: 8px; cursor: grab;
+  touch-action: none; user-select: none; line-height: 1.25;
+}
+.cal-goal:active { border-color: var(--accent); background: rgba(255,90,60,.12); }
+.cal-ghost {
+  position: fixed; z-index: 300; transform: translate(-50%, -140%); background: var(--accent); color: #fff;
+  padding: 8px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5); opacity: .96; white-space: nowrap; max-width: 200px;
+  overflow: hidden; text-overflow: ellipsis;
+}
 
 .empty { text-align: center; padding: 48px 20px; color: var(--text-faint); }
 .empty .big { font-size: 46px; margin-bottom: 10px; }

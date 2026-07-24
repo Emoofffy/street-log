@@ -71,7 +71,17 @@ function seedDB() {
     prs: [],            // {id,name,type:'reps'|'time'|'weight',history:[{date,value,note}]}
     body: [],           // {id,date,weight,bodyfat,notes,measures:{}}
     templates: [],      // {id,name,day,icon,exercises:[{name,type,sets:[{reps,weight,time}]}]}
-    timeline: [],       // {id,date:'YYYY-MM-DD',time:'HH:MM',text}
+    timeline: [],       // (舊版即時時間軸，保留相容)
+    goals: [            // 可拖曳的每日練習目標（行事曆右側清單）
+      { id: 'g1', text: '引體 / Muscle-up' },
+      { id: 'g2', text: '雙槓 / 推系列' },
+      { id: 'g3', text: '前水平 Front Lever' },
+      { id: 'g4', text: '俄挺 Planche' },
+      { id: 'g5', text: '核心 Core' },
+      { id: 'g6', text: '倒立 Handstand' },
+      { id: 'g7', text: '伸展放鬆' },
+    ],
+    calendar: [],       // {id,date,start(分),dur(分),text}
     program: [],        // (已停用，保留向後相容)
   };
 }
@@ -960,103 +970,180 @@ function importData(file) {
 }
 
 /* ============================================================
-   時間軸 Timeline（即時記錄當下在做什麼）
+   行事曆 Calendar（拖曳每日練習目標到時間軸排程）
    ============================================================ */
-let tlOffset = 0; // 0 = 今天，-1 = 昨天…
-const TL_QUICK = ['暖身', '技能練習', '組間休息', '伸展', '補水', '拉單槓', '核心', '冷卻放鬆'];
+let calOffset = 0;                     // 0 = 今天
+const CAL_START_H = 6, CAL_END_H = 24; // 顯示 06:00–24:00
+const HOUR_PX = 60, SNAP_MIN = 15;     // 每小時 60px，貼齊 15 分
+let calDrag = null;                    // 拖曳狀態
 
-function tlDateISO() {
-  const d = new Date(); d.setDate(d.getDate() + tlOffset);
+function calDateISO() {
+  const d = new Date(); d.setDate(d.getDate() + calOffset);
   return isoLocal(d);
 }
-function nowHM() {
-  const d = new Date();
-  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+function minToHM(m) {
+  m = Math.max(0, Math.round(m));
+  return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 }
-function addTimelineEntry(text, time) {
-  DB.timeline.push({ id: uid(), date: tlDateISO(), time: time || nowHM(), text });
-  saveDB();
-}
+function nowMinutes() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 
-function renderTimeline() {
-  const date = tlDateISO();
-  const isToday = tlOffset === 0;
-  const entries = DB.timeline.filter(e => e.date === date).sort((a, b) => a.time.localeCompare(b.time));
+function renderCalendar() {
+  const date = calDateISO();
+  const isToday = calOffset === 0;
+  const events = DB.calendar.filter(e => e.date === date).sort((a, b) => a.start - b.start);
+  const totalMin = (CAL_END_H - CAL_START_H) * 60;
+  const gridH = (CAL_END_H - CAL_START_H) * HOUR_PX;
+
+  let hours = '';
+  for (let h = CAL_START_H; h <= CAL_END_H; h++) {
+    const top = (h - CAL_START_H) * HOUR_PX;
+    hours += `<div class="cal-hourline" style="top:${top}px"><span class="cal-hlabel">${String(h % 24).padStart(2, '0')}:00</span></div>`;
+  }
+  let nowLine = '';
+  if (isToday) {
+    const nm = nowMinutes();
+    if (nm >= CAL_START_H * 60 && nm <= CAL_END_H * 60) {
+      nowLine = `<div class="cal-now" style="top:${(nm - CAL_START_H * 60) / 60 * HOUR_PX}px"></div>`;
+    }
+  }
+  const evHtml = events.map(e => {
+    const top = (e.start - CAL_START_H * 60) / 60 * HOUR_PX;
+    const height = Math.max(34, e.dur / 60 * HOUR_PX);
+    return `<div class="cal-ev" data-ev="${e.id}" style="top:${top}px;height:${height}px">
+      <div class="cal-ev-t">${minToHM(e.start)}–${minToHM(e.start + e.dur)}</div>
+      <div class="cal-ev-txt">${esc(e.text)}</div></div>`;
+  }).join('');
 
   view.innerHTML = `
-    <div class="page-head"><div><h1>時間軸</h1><div class="sub">隨手記下你當下正在做的事</div></div></div>
-    <div class="row between" style="margin-bottom:14px">
-      <button class="btn sm ghost" id="tl-prev" style="font-size:20px;padding:4px 14px">‹</button>
+    <div class="page-head"><div><h1>行事曆</h1><div class="sub">把右側練習目標拖到時間軸上排程</div></div></div>
+    <div class="row between" style="margin-bottom:12px">
+      <button class="btn sm ghost" id="cal-prev" style="font-size:20px;padding:4px 14px">‹</button>
       <b style="font-size:16px">${isToday ? '今天 · ' : ''}${fmtDate(date)}</b>
-      <button class="btn sm ghost" id="tl-next" style="font-size:20px;padding:4px 14px${tlOffset >= 0 ? ';opacity:.25' : ''}">›</button>
+      <button class="btn sm ghost" id="cal-next" style="font-size:20px;padding:4px 14px">›</button>
     </div>
-
-    ${isToday ? `
-    <div class="card">
-      <div class="row" style="gap:8px">
-        <input id="tl-input" class="grow" placeholder="現在正在做什麼？" style="font-size:15px" autocomplete="off">
-        <button class="btn primary" id="tl-add" style="padding:12px 18px">＋</button>
+    <div class="cal-wrap">
+      <div class="cal-grid" id="cal-grid" style="height:${gridH}px">
+        ${hours}${nowLine}${evHtml}
       </div>
-      <div class="chips" style="margin-top:10px">
-        ${TL_QUICK.map(q => `<span class="chip tl-quick" data-q="${esc(q)}">＋ ${esc(q)}</span>`).join('')}
+      <div class="cal-palette">
+        <div class="cal-pal-title">練習目標</div>
+        <div id="pal-list">${DB.goals.map(g => `<div class="cal-goal" data-goal="${g.id}">${esc(g.text)}</div>`).join('')}</div>
+        <button class="btn sm ghost block" id="pal-manage" style="margin-top:6px;font-size:12px">＋ 編輯目標</button>
       </div>
-    </div>` : ''}
-
-    ${entries.length
-      ? `<div class="timeline">${entries.map(tlItem).join('')}</div>`
-      : emptyBox('⏱️', '這天還沒有紀錄', isToday ? '在上面輸入你當下在做的事，會自動蓋上時間' : '這天沒有留下時間軸')}
+    </div>
+    <div class="faint" style="font-size:12px;text-align:center;margin-top:12px">按住右側目標拖到左邊時段放開即可排入 · 點事件可調時長或刪除 · 拖曳事件可改時間</div>
   `;
 
-  $('#tl-prev').onclick = () => { tlOffset--; renderTimeline(); };
-  const nx = $('#tl-next'); if (nx && tlOffset < 0) nx.onclick = () => { tlOffset++; renderTimeline(); };
+  $('#cal-prev').onclick = () => { calOffset--; renderCalendar(); };
+  $('#cal-next').onclick = () => { calOffset++; renderCalendar(); };
+  $('#pal-manage').onclick = openGoalManager;
+  $$('.cal-goal').forEach(el => el.addEventListener('pointerdown', ev => {
+    const g = DB.goals.find(x => x.id === el.dataset.goal); if (!g) return;
+    startCalDrag(ev, el, g.text, null);
+  }));
+  $$('.cal-ev').forEach(el => el.addEventListener('pointerdown', ev => {
+    const e = DB.calendar.find(x => x.id === el.dataset.ev); if (!e) return;
+    startCalDrag(ev, el, e.text, e.id);
+  }));
+}
 
-  if (isToday) {
-    const inp = $('#tl-input');
-    const add = () => {
-      const v = inp.value.trim(); if (!v) return;
-      addTimelineEntry(v); renderTimeline();
-      setTimeout(() => $('#tl-input')?.focus(), 0);
-    };
-    $('#tl-add').onclick = add;
-    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
-    $$('.tl-quick').forEach(c => c.onclick = () => { addTimelineEntry(c.dataset.q); renderTimeline(); });
+function gridTimeAt(clientY) {
+  const grid = $('#cal-grid'); if (!grid) return CAL_START_H * 60;
+  const rect = grid.getBoundingClientRect();
+  return CAL_START_H * 60 + ((clientY - rect.top) / HOUR_PX) * 60;
+}
+function snapMin(m) { return Math.round(m / SNAP_MIN) * SNAP_MIN; }
+
+function startCalDrag(ev, el, text, existingId) {
+  ev.preventDefault();
+  const ghost = document.createElement('div');
+  ghost.className = 'cal-ghost'; ghost.textContent = text;
+  document.body.appendChild(ghost);
+  calDrag = { text, existingId, ghost, el, startX: ev.clientX, startY: ev.clientY, moved: false, pid: ev.pointerId };
+  ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+  // 掛在 window：觸控（隱式捕捉）與滑鼠都能可靠收到 move/up
+  window.addEventListener('pointermove', onCalDragMove, { passive: false });
+  window.addEventListener('pointerup', onCalDragUp);
+  window.addEventListener('pointercancel', onCalDragUp);
+}
+function onCalDragMove(ev) {
+  if (!calDrag) return;
+  ev.preventDefault();
+  if (Math.abs(ev.clientX - calDrag.startX) + Math.abs(ev.clientY - calDrag.startY) > 6) calDrag.moved = true;
+  calDrag.ghost.style.left = ev.clientX + 'px';
+  calDrag.ghost.style.top = ev.clientY + 'px';
+}
+function onCalDragUp(ev) {
+  const d = calDrag; if (!d) return;
+  calDrag = null;
+  window.removeEventListener('pointermove', onCalDragMove);
+  window.removeEventListener('pointerup', onCalDragUp);
+  window.removeEventListener('pointercancel', onCalDragUp);
+  d.ghost.remove();
+
+  // 沒移動 + 是既有事件 → 視為點擊，開編輯
+  if (!d.moved && d.existingId) { openEventEdit(d.existingId); return; }
+
+  // 只看垂直位置（＝時間）；左右不限，避免放歪就失敗
+  const grid = $('#cal-grid'); const rect = grid.getBoundingClientRect();
+  const overGrid = ev.clientY >= rect.top - 10 && ev.clientY <= rect.bottom + 10;
+  if (!overGrid) return;
+
+  let start = snapMin(gridTimeAt(ev.clientY));
+  if (d.existingId) {
+    const e = DB.calendar.find(x => x.id === d.existingId);
+    e.start = clamp(start, CAL_START_H * 60, CAL_END_H * 60 - e.dur);
+    e.date = calDateISO();
+  } else {
+    start = clamp(start, CAL_START_H * 60, CAL_END_H * 60 - 30);
+    DB.calendar.push({ id: uid(), date: calDateISO(), start, dur: 30, text: d.text });
   }
-  $$('[data-tldel]').forEach(b => b.onclick = e => {
-    e.stopPropagation();
-    DB.timeline = DB.timeline.filter(x => x.id !== b.dataset.tldel); saveDB(); renderTimeline();
-  });
-  $$('[data-tledit]').forEach(el => el.onclick = () => openTimelineEdit(el.dataset.tledit));
+  saveDB(); renderCalendar();
 }
 
-function tlItem(e) {
-  return `<div class="tl-item">
-    <div class="tl-time">${e.time}</div>
-    <div class="tl-mid"><span class="tl-dot"></span></div>
-    <div class="tl-body" data-tledit="${e.id}">
-      <span class="grow">${esc(e.text)}</span>
-      <button class="btn sm danger" data-tldel="${e.id}" aria-label="刪除">✕</button>
-    </div>
-  </div>`;
-}
-
-function openTimelineEdit(id) {
-  const e = DB.timeline.find(x => x.id === id);
-  if (!e) return;
+function openEventEdit(id) {
+  const e = DB.calendar.find(x => x.id === id); if (!e) return;
+  const DURS = [15, 30, 45, 60, 90, 120];
   openSheet(`
-    <div class="sheet-head"><h2>編輯紀錄</h2><button class="btn primary sm" id="tl-save">完成</button></div>
-    <label class="field"><span class="lbl">內容</span><textarea id="e-text" style="min-height:80px">${esc(e.text)}</textarea></label>
-    <label class="field"><span class="lbl">時間</span><input id="e-time" type="time" value="${esc(e.time)}"></label>
-    <button class="btn danger block" id="e-del">刪除這筆</button>
+    <div class="sheet-head"><h2>編輯安排</h2><button class="btn primary sm" id="ev-save">完成</button></div>
+    <label class="field"><span class="lbl">內容</span><input id="ev-text" value="${esc(e.text)}"></label>
+    <label class="field"><span class="lbl">開始時間</span><input id="ev-start" type="time" value="${minToHM(e.start)}"></label>
+    <label class="field"><span class="lbl">時長</span>
+      <div class="chips">${DURS.map(m => `<span class="chip dur-chip ${e.dur === m ? 'on' : ''}" data-m="${m}">${m < 60 ? m + ' 分' : (m % 60 ? (m / 60).toFixed(1) : m / 60) + ' 小時'}</span>`).join('')}</div></label>
+    <button class="btn danger block" id="ev-del">刪除這筆安排</button>
   `, sheet => {
-    $('#tl-save', sheet).onclick = () => {
-      e.text = $('#e-text', sheet).value.trim() || e.text;
-      e.time = $('#e-time', sheet).value || e.time;
-      saveDB(); closeSheet(); renderTimeline();
+    let dur = e.dur;
+    $$('.dur-chip', sheet).forEach(c => c.onclick = () => { dur = +c.dataset.m; $$('.dur-chip', sheet).forEach(x => x.classList.toggle('on', x === c)); });
+    $('#ev-save', sheet).onclick = () => {
+      e.text = $('#ev-text', sheet).value.trim() || e.text;
+      const v = $('#ev-start', sheet).value; if (v) { const [hh, mm] = v.split(':').map(Number); e.start = hh * 60 + mm; }
+      e.dur = dur;
+      e.start = clamp(e.start, CAL_START_H * 60, CAL_END_H * 60 - e.dur);
+      saveDB(); closeSheet(); renderCalendar();
     };
-    $('#e-del', sheet).onclick = () => {
-      DB.timeline = DB.timeline.filter(x => x.id !== id); saveDB(); closeSheet(); renderTimeline();
-    };
+    $('#ev-del', sheet).onclick = () => { DB.calendar = DB.calendar.filter(x => x.id !== id); saveDB(); closeSheet(); renderCalendar(); };
   });
+}
+
+function openGoalManager() {
+  openSheet('', sheet => {
+    function draw() {
+      sheet.innerHTML = `
+        <div class="sheet-head"><h2>練習目標</h2><button class="btn sm ghost" id="g-close">關閉</button></div>
+        <div class="muted" style="font-size:13px;margin-bottom:10px">這些是可拖曳的目標，新增後會出現在行事曆右側。</div>
+        <div class="row" style="gap:8px;margin-bottom:14px">
+          <input id="g-new" class="grow" placeholder="例：前水平團身 5 組">
+          <button class="btn primary" id="g-add">加入</button></div>
+        ${DB.goals.map(g => `<div class="li"><div class="grow"><b>${esc(g.text)}</b></div><button class="btn sm danger" data-gdel="${g.id}" aria-label="刪除">✕</button></div>`).join('') || '<div class="muted" style="font-size:14px">還沒有目標</div>'}
+      `;
+      $('#g-close', sheet).onclick = () => { closeSheet(); renderCalendar(); };
+      const addGoal = () => { const v = $('#g-new', sheet).value.trim(); if (!v) return; DB.goals.push({ id: uid(), text: v }); saveDB(); draw(); };
+      $('#g-add', sheet).onclick = addGoal;
+      $('#g-new', sheet).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addGoal(); } };
+      $$('[data-gdel]', sheet).forEach(b => b.onclick = () => { DB.goals = DB.goals.filter(x => x.id !== b.dataset.gdel); saveDB(); draw(); });
+    }
+    draw();
+  }, () => renderCalendar());
 }
 
 /* ============================================================
@@ -1300,7 +1387,7 @@ function sparkline(values, color = '#f5c451') {
 /* ============================================================
    啟動
    ============================================================ */
-const RENDERERS = { home: renderHome, timeline: renderTimeline, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
+const RENDERERS = { home: renderHome, calendar: renderCalendar, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
 go('home');
 
 /* Service Worker（離線 + 加到主畫面） */
