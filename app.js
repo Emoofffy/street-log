@@ -959,6 +959,193 @@ function importData(file) {
 }
 
 /* ============================================================
+   回顧 Review（週 / 月 / 年 / 全部）
+   ============================================================ */
+let reviewType = 'week';
+let reviewOffset = 0;
+
+function isoLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtDur(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  if (m < 60) return `${m} 分 ${sec} 秒`;
+  const h = Math.floor(m / 60);
+  return `${h} 小時 ${m % 60} 分`;
+}
+function reviewRange(type, offset) {
+  const now = new Date(todayISO() + 'T00:00:00');
+  if (type === 'all') return { start: '0000-01-01', end: '9999-12-31', label: '全部時間', nav: false };
+  if (type === 'week') {
+    const ws = new Date(now); const day = (ws.getDay() + 6) % 7;
+    ws.setDate(ws.getDate() - day + offset * 7);
+    const we = new Date(ws); we.setDate(we.getDate() + 6);
+    const lbl = `${ws.getMonth() + 1}/${ws.getDate()} – ${we.getMonth() + 1}/${we.getDate()}`;
+    return { start: isoLocal(ws), end: isoLocal(we), label: offset === 0 ? '本週 · ' + lbl : lbl, nav: true };
+  }
+  if (type === 'month') {
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const e = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    return { start: isoLocal(d), end: isoLocal(e), label: `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`, nav: true };
+  }
+  const y = now.getFullYear() + offset;
+  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `${y} 年`, nav: true };
+}
+
+function renderReview() {
+  const rng = reviewRange(reviewType, reviewOffset);
+  const ws = DB.workouts.filter(w => w.date >= rng.start && w.date <= rng.end);
+
+  let sets = 0, reps = 0, vol = 0, secs = 0;
+  const exCount = {}, dayset = new Set(), tplCount = {};
+  for (const w of ws) {
+    dayset.add(w.date);
+    if (w.fromTemplate) tplCount[w.fromTemplate] = (tplCount[w.fromTemplate] || 0) + 1;
+    for (const ex of w.exercises || []) {
+      const t = ex.type || 'reps';
+      for (const s of ex.sets || []) {
+        sets++;
+        if (t === 'time') secs += +s.time || 0; else reps += +s.reps || 0;
+        vol += (+s.reps || 0) * (+s.weight || 0);
+      }
+      exCount[ex.name] = (exCount[ex.name] || 0) + (ex.sets || []).length;
+    }
+  }
+  const topEx = Object.entries(exCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const newPRs = [];
+  for (const pr of DB.prs) {
+    const h = [...pr.history].sort((a, b) => a.date.localeCompare(b.date));
+    let mx = 0;
+    for (const e of h) {
+      if (+e.value > mx) {
+        if (e.date >= rng.start && e.date <= rng.end) newPRs.push({ name: pr.name, type: pr.type, value: +e.value, date: e.date });
+        mx = +e.value;
+      }
+    }
+  }
+  const bodies = DB.body.filter(b => b.date >= rng.start && b.date <= rng.end && b.weight)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let bodyDelta = null;
+  if (bodies.length >= 2) {
+    const d = (+bodies[bodies.length - 1].weight) - (+bodies[0].weight);
+    bodyDelta = { from: +bodies[0].weight, to: +bodies[bodies.length - 1].weight, d };
+  }
+  const tplRows = Object.entries(tplCount).map(([id, c]) => {
+    const t = DB.templates.find(x => x.id === id);
+    return { name: t ? t.name : '（已刪除的範本）', icon: (t && t.icon) || '📋', c };
+  }).sort((a, b) => b.c - a.c);
+
+  view.innerHTML = `
+    <div class="page-head"><div><h1>回顧</h1><div class="sub">看看你的累積與進步</div></div></div>
+    <div class="chips" style="margin-bottom:12px">
+      ${[['week', '本週'], ['month', '本月'], ['year', '今年'], ['all', '全部']]
+        .map(([k, l]) => `<span class="chip rv-type ${reviewType === k ? 'on' : ''}" data-k="${k}">${l}</span>`).join('')}
+    </div>
+    <div class="row between" style="margin-bottom:16px">
+      ${rng.nav ? `<button class="btn sm ghost" id="rv-prev" style="font-size:20px;padding:4px 14px">‹</button>` : '<span></span>'}
+      <b style="font-size:16px">${rng.label}</b>
+      ${rng.nav ? `<button class="btn sm ghost" id="rv-next" style="font-size:20px;padding:4px 14px${reviewOffset >= 0 ? ';opacity:.25' : ''}">›</button>` : '<span></span>'}
+    </div>
+
+    ${ws.length === 0 ? emptyBox('🗓️', '這段期間沒有訓練紀錄', '換個時間範圍，或去練一場 💪') : `
+    <div class="stat-grid">
+      <div class="stat"><div class="num accent">${ws.length}</div><div class="lbl">訓練場次</div></div>
+      <div class="stat"><div class="num">${dayset.size}</div><div class="lbl">訓練天數</div></div>
+      <div class="stat"><div class="num green">${sets}</div><div class="lbl">總組數</div></div>
+      <div class="stat"><div class="num blue">${reps.toLocaleString()}</div><div class="lbl">總反覆次數</div></div>
+    </div>
+    ${secs > 0 ? `<div class="card"><div class="row between"><span class="muted">靜態撐體總時間</span><b>${fmtDur(secs)}</b></div></div>` : ''}
+    ${vol > 0 ? `<div class="card"><div class="row between"><span class="muted">負重總量</span><b>${Math.round(vol).toLocaleString()} ${DB.profile.unit}</b></div></div>` : ''}
+
+    <div class="section-title">訓練頻率</div>
+    <div class="card">${renderHeatmap(reviewType, rng, ws)}</div>
+
+    ${tplRows.length ? `<div class="section-title">課表完成</div>
+      ${tplRows.map(t => `<div class="li"><div class="badge">${t.icon}</div><div class="grow"><b>${esc(t.name)}</b></div><span class="tag accent">${t.c} 次</span></div>`).join('')}` : ''}
+
+    ${topEx.length ? `<div class="section-title">最常練的動作</div>
+      <div class="card">${topEx.map(([n, c], i) => { const mx = topEx[0][1]; return `
+        <div style="margin-bottom:${i < topEx.length - 1 ? '12px' : '0'}">
+          <div class="row between" style="margin-bottom:4px"><b style="font-size:14px">${esc(n)}</b><span class="muted" style="font-size:13px">${c} 組</span></div>
+          <div class="pbar"><i style="width:${Math.round(c / mx * 100)}%"></i></div></div>`; }).join('')}</div>` : ''}
+
+    <div class="section-title">亮點</div>
+    ${newPRs.length ? newPRs.sort((a, b) => b.date.localeCompare(a.date)).map(p => `
+      <div class="card"><div class="row between"><div><span class="tag gold">🏆 新 PR</span> <b>${esc(p.name)}</b></div>
+        <div style="font-weight:800;color:var(--gold)">${prValueText({ type: p.type, value: p.value })}</div></div>
+        <div class="faint" style="font-size:12px;margin-top:6px">${fmtDate(p.date)}</div></div>`).join('')
+      : `<div class="card muted" style="font-size:14px">這段期間還沒有新的個人紀錄 — 下一個突破就靠你了！</div>`}
+    ${bodyDelta ? `<div class="card"><div class="row between"><span class="muted">體重變化</span>
+      <b style="color:${bodyDelta.d < 0 ? 'var(--accent-2)' : bodyDelta.d > 0 ? 'var(--accent-3)' : 'var(--text)'}">${bodyDelta.from} → ${bodyDelta.to} ${DB.profile.unit}（${bodyDelta.d > 0 ? '+' : ''}${bodyDelta.d.toFixed(1)}）</b></div></div>` : ''}
+    `}
+  `;
+
+  $$('.rv-type').forEach(c => c.onclick = () => { reviewType = c.dataset.k; reviewOffset = 0; renderReview(); });
+  const pv = $('#rv-prev'); if (pv) pv.onclick = () => { reviewOffset--; renderReview(); };
+  const nx = $('#rv-next'); if (nx && reviewOffset < 0) nx.onclick = () => { reviewOffset++; renderReview(); };
+}
+
+/* 訓練頻率熱力圖：週→日條、月→日曆、年/全部→月柱 */
+function renderHeatmap(type, rng, ws) {
+  const perDay = {};
+  for (const w of ws) {
+    let s = 0; for (const ex of w.exercises || []) s += (ex.sets || []).length;
+    perDay[w.date] = (perDay[w.date] || 0) + s;
+  }
+  const maxSets = Math.max(1, ...Object.values(perDay));
+  const cellColor = v => v > 0 ? `background:rgba(255,90,60,${(0.28 + 0.62 * Math.min(1, v / maxSets)).toFixed(2)})` : 'background:var(--bg-elev2)';
+  const wd = ['一', '二', '三', '四', '五', '六', '日'];
+
+  if (type === 'week') {
+    const start = new Date(rng.start + 'T00:00:00');
+    let cells = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start); d.setDate(d.getDate() + i);
+      const iso = isoLocal(d); const v = perDay[iso] || 0;
+      cells += `<div style="flex:1;text-align:center"><div class="faint" style="font-size:11px;margin-bottom:4px">${wd[i]}</div>
+        <div style="height:44px;border-radius:8px;${cellColor(v)};display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700">${v || ''}</div>
+        <div class="faint" style="font-size:10px;margin-top:3px">${d.getMonth() + 1}/${d.getDate()}</div></div>`;
+    }
+    return `<div class="row" style="gap:6px;align-items:flex-end">${cells}</div>
+      <div class="faint" style="font-size:11px;text-align:center;margin-top:10px">格內數字＝當天完成組數</div>`;
+  }
+  if (type === 'month') {
+    const first = new Date(rng.start + 'T00:00:00');
+    const y = first.getFullYear(), m = first.getMonth();
+    const daysIn = new Date(y, m + 1, 0).getDate();
+    const lead = (first.getDay() + 6) % 7;
+    let head = wd.map(d => `<div class="faint" style="font-size:10px;text-align:center">${d}</div>`).join('');
+    let cells = '';
+    for (let i = 0; i < lead; i++) cells += '<div></div>';
+    for (let day = 1; day <= daysIn; day++) {
+      const iso = isoLocal(new Date(y, m, day)); const v = perDay[iso] || 0;
+      cells += `<div style="aspect-ratio:1;border-radius:6px;${cellColor(v)};display:flex;align-items:center;justify-content:center;font-size:11px;color:${v > 0 ? '#fff' : 'var(--text-faint)'}">${day}</div>`;
+    }
+    return `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${head}${cells}</div>`;
+  }
+  // year / all → 月柱狀圖
+  const perMonth = {};
+  for (const w of ws) { const k = w.date.slice(0, 7); perMonth[k] = (perMonth[k] || 0) + 1; }
+  let months = [];
+  if (type === 'year') {
+    const y = rng.start.slice(0, 4);
+    for (let mm = 1; mm <= 12; mm++) { const k = `${y}-${String(mm).padStart(2, '0')}`; months.push([mm + '月', perMonth[k] || 0]); }
+  } else {
+    const keys = Object.keys(perMonth).sort();
+    if (!keys.length) return '<div class="chart-empty">無資料</div>';
+    months = keys.map(k => [k.slice(2).replace('-', '/'), perMonth[k]]);
+  }
+  const mx = Math.max(1, ...months.map(m => m[1]));
+  return `<div class="row" style="gap:4px;align-items:flex-end;height:130px">${months.map(([lbl, v]) => `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:2px">${v || ''}</div>
+      <div style="width:100%;border-radius:4px 4px 0 0;background:${v > 0 ? 'var(--accent)' : 'var(--bg-elev2)'};height:${Math.max(3, Math.round(v / mx * 96))}px"></div>
+      <div class="faint" style="font-size:9px;margin-top:4px;white-space:nowrap">${lbl}</div></div>`).join('')}</div>
+    <div class="faint" style="font-size:11px;text-align:center;margin-top:8px">柱高＝當月訓練場次</div>`;
+}
+
+/* ============================================================
    共用 UI：Sheet / 圖表 / 空狀態
    ============================================================ */
 function openSheet(html, onMount, onClose) {
@@ -1012,7 +1199,7 @@ function sparkline(values, color = '#f5c451') {
 /* ============================================================
    啟動
    ============================================================ */
-const RENDERERS = { home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody };
+const RENDERERS = { home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
 go('home');
 
 /* Service Worker（離線 + 加到主畫面） */
