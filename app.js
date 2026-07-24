@@ -70,7 +70,8 @@ function seedDB() {
     skills: [],         // {id,key,icon,name,levels:[],current,note,updated}
     prs: [],            // {id,name,type:'reps'|'time'|'weight',history:[{date,value,note}]}
     body: [],           // {id,date,weight,bodyfat,notes,measures:{}}
-    program: [],        // {id,day,focus,items:[str]}
+    templates: [],      // {id,name,day,icon,exercises:[{name,type,sets:[{reps,weight,time}]}]}
+    program: [],        // (已停用，保留向後相容)
   };
 }
 
@@ -140,6 +141,8 @@ function renderHome() {
 
     <button class="btn primary block" id="quick-start" style="margin:4px 0 6px">＋ 開始今天的訓練</button>
 
+    ${renderWeekPlan()}
+
     <div class="section-title">最近訓練</div>
     ${last ? workoutCard(last) : emptyBox('🏋️', '還沒有訓練紀錄', '點上面按鈕記錄第一次')}
 
@@ -154,10 +157,55 @@ function renderHome() {
   `;
 
   $('#btn-settings').onclick = openSettings;
-  $('#quick-start').onclick = () => openWorkoutSheet();
+  $('#quick-start').onclick = () => openStartChooser();
   const af = $('#add-first-skill'); if (af) af.onclick = () => go('skills');
   const ms = $('#more-skills'); if (ms) ms.onclick = () => go('skills');
+  const sp = $('#setup-plan'); if (sp) sp.onclick = () => go('body');
+  $$('.wk-start').forEach(b => b.onclick = () => openWorkoutSheet(null, b.dataset.tpl));
   bindWorkoutCards();
+}
+
+/* ---------- 本週計畫（一眼看出本週還缺什麼） ---------- */
+function weekStartISO() {
+  const d = new Date(todayISO() + 'T00:00:00');
+  const day = (d.getDay() + 6) % 7;           // 週一為一週開始
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0, 10);
+}
+function templateDoneThisWeek(t) {
+  const ws = weekStartISO();
+  return DB.workouts.some(w => w.fromTemplate === t.id && w.date >= ws);
+}
+function renderWeekPlan() {
+  if (!DB.templates.length) {
+    return `<div class="section-title">本週計畫</div>
+      <div class="card tap" id="setup-plan"><div class="row between">
+        <div><h3 style="margin:0">🗓️ 建立你的固定課表</h3>
+          <div class="muted" style="font-size:13px">例如 A 日 / B 日，之後一鍵開始、自動追蹤每週進度</div></div>
+        <span style="font-size:22px">＋</span></div></div>`;
+  }
+  const done = DB.templates.filter(templateDoneThisWeek).length;
+  const total = DB.templates.length;
+  const pct = Math.round(done / total * 100);
+  const remain = DB.templates.filter(t => !templateDoneThisWeek(t));
+  return `<div class="section-title">本週計畫 · ${done}/${total} 完成</div>
+    <div class="card">
+      <div class="row between" style="margin-bottom:6px">
+        <b style="font-size:14px;color:${done === total ? 'var(--accent-2)' : 'var(--text)'}">
+          ${done === total ? '🎉 本週課表全部完成！' : '還缺：' + remain.map(t => esc(t.name)).join('、')}</b>
+        <span class="muted" style="font-size:13px">${pct}%</span></div>
+      <div class="pbar"><i style="width:${pct}%"></i></div>
+    </div>
+    ${DB.templates.map(t => {
+      const d = templateDoneThisWeek(t);
+      return `<div class="card"><div class="row between">
+        <div class="row" style="gap:12px"><span style="font-size:22px;${d ? '' : 'filter:none'}">${t.icon || '📋'}</span>
+          <div><b style="font-size:15px;color:${d ? 'var(--text-dim)' : 'var(--text)'}">${esc(t.name)}</b>
+            <div class="faint" style="font-size:12px">${t.day ? esc(t.day) + ' · ' : ''}${t.exercises.length} 動作</div></div></div>
+        ${d ? '<span class="tag green">✓ 本週完成</span>'
+            : `<button class="btn primary sm wk-start" data-tpl="${t.id}">▶ 開始</button>`}
+      </div></div>`;
+    }).join('')}`;
 }
 
 function greeting() {
@@ -232,7 +280,7 @@ function renderLog() {
     ${list.length ? list.map(workoutCard).join('') : emptyBox('🏋️', '還沒有訓練紀錄', '點右下角 ＋ 新增')}
     <button class="fab" id="fab-add" aria-label="新增訓練">＋</button>
   `;
-  $('#fab-add').onclick = () => openWorkoutSheet();
+  $('#fab-add').onclick = () => openStartChooser();
   bindWorkoutCards();
 }
 
@@ -272,11 +320,64 @@ function bindWorkoutCards() {
 const COMMON_EX = ['引體向上', '伏地挺身', '雙槓臂屈伸', '深蹲', '倒立伏地挺身', 'L-sit', '前水平', '俄挺撐', '划船', '核心捲腹', '登階', '硬拉'];
 const WORKOUT_TAGS = ['推 Push', '拉 Pull', '腿 Legs', '核心 Core', '全身', '技能日'];
 
-function openWorkoutSheet(id) {
+/* 開始訓練：有範本就先讓你挑，否則直接空白 */
+function openStartChooser() {
+  if (!DB.templates.length) { openWorkoutSheet(); return; }
+  openSheet(`
+    <div class="sheet-head"><h2>開始訓練</h2></div>
+    <div class="muted" style="font-size:13px;margin-bottom:12px">選一個範本（會自動帶入上次的次數 / 重量，你只要微調），或空白開始。</div>
+    ${DB.templates.map(t => `
+      <div class="card tap tpl-pick" data-tpl="${t.id}">
+        <div class="row between">
+          <div class="row" style="gap:12px"><span style="font-size:24px">${t.icon || '📋'}</span>
+            <div><h3 style="margin:0">${esc(t.name)}</h3>
+              <div class="faint" style="font-size:12px">${t.day ? esc(t.day) + ' · ' : ''}${t.exercises.length} 個動作${templateDoneThisWeek(t) ? ' · <span style="color:var(--accent-2)">本週已完成</span>' : ''}</div></div></div>
+          <span style="font-size:20px;color:var(--accent)">▶</span></div>
+      </div>`).join('')}
+    <button class="btn ghost block" id="blank-start" style="margin-top:6px">＋ 空白訓練</button>
+    <button class="btn ghost block sm" id="manage-tpl" style="margin-top:8px">⚙️ 管理範本</button>
+  `, sheet => {
+    $$('.tpl-pick', sheet).forEach(c => c.onclick = () => { closeSheet(); openWorkoutSheet(null, c.dataset.tpl); });
+    $('#blank-start', sheet).onclick = () => { closeSheet(); openWorkoutSheet(); };
+    $('#manage-tpl', sheet).onclick = () => { closeSheet(); go('body'); setTimeout(() => document.querySelector('#tpl-anchor')?.scrollIntoView({ behavior: 'smooth' }), 80); };
+  });
+}
+
+/* 找某動作最近一次的表現，用來預填（實現「上次做多少，這次微調」） */
+function lastPerf(name, type) {
+  const sorted = [...DB.workouts].sort((a, b) => b.date.localeCompare(a.date));
+  for (const w of sorted) {
+    const ex = (w.exercises || []).find(e => e.name === name && (e.type || 'reps') === type);
+    if (ex && ex.sets.length) return ex;
+  }
+  return null;
+}
+/* 由範本動作產生可填的動作（優先帶入上次數字） */
+function instantiateEx(tex) {
+  const type = tex.type || 'reps';
+  const last = lastPerf(tex.name, type);
+  const src = (last && last.sets.length) ? last.sets
+    : (tex.sets && tex.sets.length ? tex.sets : [{ reps: '', weight: '', time: '' }]);
+  return {
+    name: tex.name, type, note: tex.note || '',
+    sets: src.map(s => ({ reps: s.reps || '', weight: s.weight || '', time: s.time || '', done: false })),
+  };
+}
+
+function openWorkoutSheet(id, fromTemplateId) {
   const editing = DB.workouts.find(w => w.id === id);
-  const w = editing
-    ? JSON.parse(JSON.stringify(editing))
-    : { id: uid(), date: todayISO(), name: '', tags: [], exercises: [], note: '' };
+  let w;
+  if (editing) {
+    w = JSON.parse(JSON.stringify(editing));
+  } else {
+    w = { id: uid(), date: todayISO(), name: '', tags: [], exercises: [], note: '' };
+    const t = fromTemplateId ? DB.templates.find(x => x.id === fromTemplateId) : null;
+    if (t) {
+      w.name = t.name;
+      w.exercises = t.exercises.map(instantiateEx);
+      w.fromTemplate = t.id;
+    }
+  }
   if (!w.exercises.length) w.exercises.push(newEx());
 
   openSheet(renderWorkoutForm(w, !!editing), sheet => {
@@ -295,32 +396,7 @@ function openWorkoutSheet(id) {
         state.tags = state.tags.includes(t) ? state.tags.filter(x => x !== t) : [...state.tags, t];
         rerender();
       });
-      // 每個動作
-      $$('.ex-block', sheet).forEach(block => {
-        const ei = +block.dataset.ei;
-        $('.ex-name', block).oninput = e => state.exercises[ei].name = e.target.value;
-        $('.ex-del', block).onclick = () => { state.exercises.splice(ei, 1); if (!state.exercises.length) state.exercises.push(newEx()); rerender(); };
-        $('.ex-addset', block).onclick = () => {
-          const sets = state.exercises[ei].sets;
-          const last = sets[sets.length - 1] || {};
-          sets.push({ reps: last.reps || '', weight: last.weight || '', time: last.time || '', done: false });
-          rerender();
-        };
-        $$('.set-row', block).forEach(sr => {
-          const si = +sr.dataset.si;
-          $$('input', sr).forEach(inp => inp.oninput = e => state.exercises[ei].sets[si][inp.dataset.f] = e.target.value);
-          const del = $('.set-del', sr); if (del) del.onclick = () => { state.exercises[ei].sets.splice(si, 1); rerender(); };
-        });
-        $('.ex-type', block).onchange = e => { state.exercises[ei].type = e.target.value; rerender(); };
-      });
-      $('#add-ex', sheet).onclick = () => { state.exercises.push(newEx()); rerender();
-        setTimeout(() => { const blocks = $$('.ex-block', sheet); blocks[blocks.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 30);
-      };
-      $$('.quick-ex', sheet).forEach(q => q.onclick = () => {
-        const empty = state.exercises.find(x => !x.name);
-        if (empty) empty.name = q.dataset.n; else state.exercises.push(newEx(q.dataset.n));
-        rerender();
-      });
+      wireExercises(sheet, state, rerender);
       $('#save-w', sheet).onclick = () => {
         state.exercises = state.exercises.filter(e => e.name || e.sets.some(s => s.reps || s.time || s.weight));
         if (!state.name && !state.exercises.length) { toast('先加點內容吧'); return; }
@@ -341,6 +417,37 @@ function openWorkoutSheet(id) {
   });
 }
 function newEx(name = '') { return { name, type: 'reps', sets: [{ reps: '', weight: '', time: '', done: false }], note: '' }; }
+
+/* 動作區塊的共用事件綁定（訓練與範本編輯共用） */
+function wireExercises(sheet, state, rerender) {
+  $$('.ex-block', sheet).forEach(block => {
+    const ei = +block.dataset.ei;
+    $('.ex-name', block).oninput = e => state.exercises[ei].name = e.target.value;
+    $('.ex-del', block).onclick = () => { state.exercises.splice(ei, 1); if (!state.exercises.length) state.exercises.push(newEx()); rerender(); };
+    $('.ex-addset', block).onclick = () => {
+      const sets = state.exercises[ei].sets;
+      const last = sets[sets.length - 1] || {};
+      sets.push({ reps: last.reps || '', weight: last.weight || '', time: last.time || '', done: false });
+      rerender();
+    };
+    $$('.set-row', block).forEach(sr => {
+      const si = +sr.dataset.si;
+      $$('input', sr).forEach(inp => inp.oninput = e => state.exercises[ei].sets[si][inp.dataset.f] = e.target.value);
+      const del = $('.set-del', sr); if (del) del.onclick = () => { state.exercises[ei].sets.splice(si, 1); rerender(); };
+    });
+    $('.ex-type', block).onchange = e => { state.exercises[ei].type = e.target.value; rerender(); };
+  });
+  const addEx = $('#add-ex', sheet);
+  if (addEx) addEx.onclick = () => {
+    state.exercises.push(newEx()); rerender();
+    setTimeout(() => { const b = $$('.ex-block', sheet); b[b.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 30);
+  };
+  $$('.quick-ex', sheet).forEach(q => q.onclick = () => {
+    const empty = state.exercises.find(x => !x.name);
+    if (empty) empty.name = q.dataset.n; else state.exercises.push(newEx(q.dataset.n));
+    rerender();
+  });
+}
 
 function renderWorkoutForm(w, editing) {
   return `
@@ -681,29 +788,41 @@ function renderBody() {
         <button class="btn sm danger" data-delbody="${b.id}">✕</button></div>`).join('')
       : '<div class="card muted" style="font-size:14px">還沒有身體數據</div>'}
 
-    <div class="section-title">每週課表</div>
-    <div id="prog-list">${renderProgram()}</div>
-    <button class="btn ghost block sm" id="add-prog" style="margin-top:8px">＋ 新增訓練日</button>
+    <div class="section-title" id="tpl-anchor">訓練範本 / 課表</div>
+    <div class="muted" style="font-size:13px;margin:-4px 0 10px">把固定課表存成範本（例：A 日 / B 日）。開始訓練時選它，會自動帶入上次數字，只要微調就好。</div>
+    <div id="tpl-list">${renderTemplates()}</div>
+    <button class="btn ghost block sm" id="add-tpl" style="margin-top:8px">＋ 新增範本</button>
   `;
 
   $('#add-body').onclick = openBodySheet;
-  $('#add-prog').onclick = () => openProgramSheet();
+  $('#add-tpl').onclick = () => openTemplateSheet();
+  $$('.tpl-start').forEach(b => b.onclick = () => openWorkoutSheet(null, b.dataset.tpl));
+  $$('.tpl-edit').forEach(b => b.onclick = () => openTemplateSheet(b.dataset.tpl));
   $$('[data-delbody]').forEach(b => b.onclick = () => {
     if (!confirm('刪除這筆數據？')) return;
     DB.body = DB.body.filter(x => x.id !== b.dataset.delbody); saveDB(); renderBody();
   });
-  $$('[data-prog]').forEach(c => c.onclick = () => openProgramSheet(c.dataset.prog));
 }
 
 const WEEKDAYS = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
-function renderProgram() {
-  if (!DB.program.length) return '<div class="card muted" style="font-size:14px">尚未安排課表。點下方新增，例如「週一：拉 + 前水平」。</div>';
-  const order = { '週一': 1, '週二': 2, '週三': 3, '週四': 4, '週五': 5, '週六': 6, '週日': 7 };
-  return [...DB.program].sort((a, b) => (order[a.day] || 9) - (order[b.day] || 9)).map(p => `
-    <div class="card tap" data-prog="${p.id}">
-      <div class="row between"><div><span class="tag accent">${esc(p.day)}</span> <b style="margin-left:6px">${esc(p.focus)}</b></div><span class="faint">${p.items.length} 項</span></div>
-      ${p.items.length ? `<div class="muted" style="font-size:13px;margin-top:8px">${p.items.map(esc).join(' · ')}</div>` : ''}
-    </div>`).join('');
+const DAY_ORDER = { '週一': 1, '週二': 2, '週三': 3, '週四': 4, '週五': 5, '週六': 6, '週日': 7 };
+function renderTemplates() {
+  if (!DB.templates.length) return '<div class="card muted" style="font-size:14px">還沒有範本。建一個固定課表（例如 A 日、B 日），之後點「開始訓練」選它就能直接做，不必每次重打。</div>';
+  return [...DB.templates].sort((a, b) => (DAY_ORDER[a.day] || 9) - (DAY_ORDER[b.day] || 9)).map(t => {
+    const done = templateDoneThisWeek(t);
+    return `<div class="card">
+      <div class="row between">
+        <div class="row" style="gap:12px"><span style="font-size:22px">${t.icon || '📋'}</span>
+          <div><b style="font-size:15px">${esc(t.name)}</b>
+            <div class="faint" style="font-size:12px">${t.day ? `<span class="tag accent">${esc(t.day)}</span> ` : ''}${t.exercises.length} 動作${done ? ' · <span style="color:var(--accent-2)">本週已完成</span>' : ''}</div></div></div>
+      </div>
+      ${t.exercises.length ? `<div class="muted" style="font-size:13px;margin-top:8px">${t.exercises.map(e => esc(e.name)).join(' · ')}</div>` : ''}
+      <div class="row" style="gap:8px;margin-top:12px">
+        <button class="btn green sm grow tpl-start" data-tpl="${t.id}">▶ 開始這個</button>
+        <button class="btn sm grow tpl-edit" data-tpl="${t.id}">編輯</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function openBodySheet() {
@@ -728,32 +847,55 @@ function openBodySheet() {
   });
 }
 
-function openProgramSheet(id) {
-  const editing = DB.program.find(p => p.id === id);
-  const p = editing ? JSON.parse(JSON.stringify(editing)) : { id: uid(), day: '週一', focus: '', items: [] };
-  openSheet(``, sheet => {
-    function draw() {
-      sheet.innerHTML = `
-        <div class="sheet-head"><h2>${editing ? '編輯訓練日' : '新增訓練日'}</h2><button class="btn primary sm" id="save-prog">儲存</button></div>
-        <label class="field"><span class="lbl">星期</span>
-          <div class="chips">${WEEKDAYS.map(d => `<span class="chip day-chip ${p.day === d ? 'on' : ''}" data-d="${d}">${d}</span>`).join('')}</div></label>
-        <label class="field"><span class="lbl">主題</span><input id="p-focus" placeholder="例：拉 + 前水平" value="${esc(p.focus)}"></label>
-        <label class="field"><span class="lbl">動作清單（每行一個）</span>
-          <textarea id="p-items" style="min-height:120px" placeholder="引體 5×5&#10;前水平團身 ×6&#10;划船 4×10">${esc(p.items.join('\n'))}</textarea></label>
-        ${editing ? '<button class="btn danger block" id="del-prog">刪除</button>' : ''}
-      `;
-      $$('.day-chip', sheet).forEach(c => c.onclick = () => { p.day = c.dataset.d; draw(); });
-      $('#save-prog', sheet).onclick = () => {
-        p.focus = $('#p-focus', sheet).value.trim() || '訓練';
-        p.items = $('#p-items', sheet).value.split('\n').map(x => x.trim()).filter(Boolean);
-        const idx = DB.program.findIndex(x => x.id === p.id);
-        if (idx >= 0) DB.program[idx] = p; else DB.program.push(p);
-        saveDB(); closeSheet(); renderBody();
+function templateForm(t) {
+  const isEdit = DB.templates.some(x => x.id === t.id);
+  return `
+    <div class="sheet-head"><h2>${isEdit ? '編輯範本' : '新增範本'}</h2>
+      <button class="btn primary sm" id="save-tpl">儲存</button></div>
+    <label class="field"><span class="lbl">範本名稱</span>
+      <input id="t-name" placeholder="例：A 日 · 推 ／ B 日 · 拉" value="${esc(t.name)}"></label>
+    <label class="field"><span class="lbl">安排在星期幾（選填）</span>
+      <div class="chips">${WEEKDAYS.map(d => `<span class="chip tday-chip ${t.day === d ? 'on' : ''}" data-d="${d}">${d}</span>`).join('')}</div></label>
+
+    <div class="section-title">固定動作</div>
+    ${t.exercises.map((ex, ei) => exerciseBlock(ex, ei)).join('')}
+    <button class="btn ghost block" id="add-ex" style="margin-top:4px">＋ 新增動作</button>
+
+    <div class="section-title">快速加入</div>
+    <div class="chips">${COMMON_EX.map(n => `<span class="chip quick-ex" data-n="${n}">${n}</span>`).join('')}</div>
+
+    <div class="faint" style="font-size:12px;margin-top:14px">💡 這裡填的次數/重量只是預設值，實際訓練時會以你「上一次的成績」自動帶入。</div>
+    ${isEdit ? '<button class="btn danger block" id="del-tpl" style="margin-top:12px">刪除範本</button>' : ''}
+  `;
+}
+function openTemplateSheet(id) {
+  const editing = DB.templates.find(t => t.id === id);
+  const state = editing ? JSON.parse(JSON.stringify(editing))
+    : { id: uid(), name: '', day: '', icon: '📋', exercises: [newEx()] };
+  if (!state.exercises.length) state.exercises.push(newEx());
+
+  openSheet('', sheet => {
+    function rerender() { sheet.innerHTML = templateForm(state); wire(); }
+    function wire() {
+      $('#t-name', sheet).oninput = e => state.name = e.target.value;
+      $$('.tday-chip', sheet).forEach(c => c.onclick = () => { state.day = state.day === c.dataset.d ? '' : c.dataset.d; rerender(); });
+      wireExercises(sheet, state, rerender);
+      $('#save-tpl', sheet).onclick = () => {
+        state.exercises = state.exercises.filter(e => e.name.trim());
+        if (!state.name.trim()) { toast('幫範本取個名字'); return; }
+        if (!state.exercises.length) { toast('至少加一個動作'); return; }
+        const idx = DB.templates.findIndex(x => x.id === state.id);
+        if (idx >= 0) DB.templates[idx] = state; else DB.templates.push(state);
+        saveDB(); closeSheet(); toast(editing ? '範本已更新 ✓' : '範本已建立 ✓'); go(CURRENT);
       };
-      const dp = $('#del-prog', sheet);
-      if (dp) dp.onclick = () => { DB.program = DB.program.filter(x => x.id !== p.id); saveDB(); closeSheet(); renderBody(); };
+      const del = $('#del-tpl', sheet);
+      if (del) del.onclick = () => {
+        if (!confirm('刪除這個範本？（已記錄的訓練不會消失）')) return;
+        DB.templates = DB.templates.filter(x => x.id !== state.id);
+        saveDB(); closeSheet(); toast('已刪除'); go(CURRENT);
+      };
     }
-    draw();
+    rerender();
   });
 }
 
