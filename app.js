@@ -71,6 +71,7 @@ function seedDB() {
     prs: [],            // {id,name,type:'reps'|'time'|'weight',history:[{date,value,note}]}
     body: [],           // {id,date,weight,bodyfat,notes,measures:{}}
     templates: [],      // {id,name,day,icon,exercises:[{name,type,sets:[{reps,weight,time}]}]}
+    timeline: [],       // {id,date:'YYYY-MM-DD',time:'HH:MM',text}
     program: [],        // (已停用，保留向後相容)
   };
 }
@@ -959,6 +960,106 @@ function importData(file) {
 }
 
 /* ============================================================
+   時間軸 Timeline（即時記錄當下在做什麼）
+   ============================================================ */
+let tlOffset = 0; // 0 = 今天，-1 = 昨天…
+const TL_QUICK = ['暖身', '技能練習', '組間休息', '伸展', '補水', '拉單槓', '核心', '冷卻放鬆'];
+
+function tlDateISO() {
+  const d = new Date(); d.setDate(d.getDate() + tlOffset);
+  return isoLocal(d);
+}
+function nowHM() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function addTimelineEntry(text, time) {
+  DB.timeline.push({ id: uid(), date: tlDateISO(), time: time || nowHM(), text });
+  saveDB();
+}
+
+function renderTimeline() {
+  const date = tlDateISO();
+  const isToday = tlOffset === 0;
+  const entries = DB.timeline.filter(e => e.date === date).sort((a, b) => a.time.localeCompare(b.time));
+
+  view.innerHTML = `
+    <div class="page-head"><div><h1>時間軸</h1><div class="sub">隨手記下你當下正在做的事</div></div></div>
+    <div class="row between" style="margin-bottom:14px">
+      <button class="btn sm ghost" id="tl-prev" style="font-size:20px;padding:4px 14px">‹</button>
+      <b style="font-size:16px">${isToday ? '今天 · ' : ''}${fmtDate(date)}</b>
+      <button class="btn sm ghost" id="tl-next" style="font-size:20px;padding:4px 14px${tlOffset >= 0 ? ';opacity:.25' : ''}">›</button>
+    </div>
+
+    ${isToday ? `
+    <div class="card">
+      <div class="row" style="gap:8px">
+        <input id="tl-input" class="grow" placeholder="現在正在做什麼？" style="font-size:15px" autocomplete="off">
+        <button class="btn primary" id="tl-add" style="padding:12px 18px">＋</button>
+      </div>
+      <div class="chips" style="margin-top:10px">
+        ${TL_QUICK.map(q => `<span class="chip tl-quick" data-q="${esc(q)}">＋ ${esc(q)}</span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${entries.length
+      ? `<div class="timeline">${entries.map(tlItem).join('')}</div>`
+      : emptyBox('⏱️', '這天還沒有紀錄', isToday ? '在上面輸入你當下在做的事，會自動蓋上時間' : '這天沒有留下時間軸')}
+  `;
+
+  $('#tl-prev').onclick = () => { tlOffset--; renderTimeline(); };
+  const nx = $('#tl-next'); if (nx && tlOffset < 0) nx.onclick = () => { tlOffset++; renderTimeline(); };
+
+  if (isToday) {
+    const inp = $('#tl-input');
+    const add = () => {
+      const v = inp.value.trim(); if (!v) return;
+      addTimelineEntry(v); renderTimeline();
+      setTimeout(() => $('#tl-input')?.focus(), 0);
+    };
+    $('#tl-add').onclick = add;
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+    $$('.tl-quick').forEach(c => c.onclick = () => { addTimelineEntry(c.dataset.q); renderTimeline(); });
+  }
+  $$('[data-tldel]').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    DB.timeline = DB.timeline.filter(x => x.id !== b.dataset.tldel); saveDB(); renderTimeline();
+  });
+  $$('[data-tledit]').forEach(el => el.onclick = () => openTimelineEdit(el.dataset.tledit));
+}
+
+function tlItem(e) {
+  return `<div class="tl-item">
+    <div class="tl-time">${e.time}</div>
+    <div class="tl-mid"><span class="tl-dot"></span></div>
+    <div class="tl-body" data-tledit="${e.id}">
+      <span class="grow">${esc(e.text)}</span>
+      <button class="btn sm danger" data-tldel="${e.id}" aria-label="刪除">✕</button>
+    </div>
+  </div>`;
+}
+
+function openTimelineEdit(id) {
+  const e = DB.timeline.find(x => x.id === id);
+  if (!e) return;
+  openSheet(`
+    <div class="sheet-head"><h2>編輯紀錄</h2><button class="btn primary sm" id="tl-save">完成</button></div>
+    <label class="field"><span class="lbl">內容</span><textarea id="e-text" style="min-height:80px">${esc(e.text)}</textarea></label>
+    <label class="field"><span class="lbl">時間</span><input id="e-time" type="time" value="${esc(e.time)}"></label>
+    <button class="btn danger block" id="e-del">刪除這筆</button>
+  `, sheet => {
+    $('#tl-save', sheet).onclick = () => {
+      e.text = $('#e-text', sheet).value.trim() || e.text;
+      e.time = $('#e-time', sheet).value || e.time;
+      saveDB(); closeSheet(); renderTimeline();
+    };
+    $('#e-del', sheet).onclick = () => {
+      DB.timeline = DB.timeline.filter(x => x.id !== id); saveDB(); closeSheet(); renderTimeline();
+    };
+  });
+}
+
+/* ============================================================
    回顧 Review（週 / 月 / 年 / 全部）
    ============================================================ */
 let reviewType = 'week';
@@ -1199,7 +1300,7 @@ function sparkline(values, color = '#f5c451') {
 /* ============================================================
    啟動
    ============================================================ */
-const RENDERERS = { home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
+const RENDERERS = { home: renderHome, timeline: renderTimeline, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
 go('home');
 
 /* Service Worker（離線 + 加到主畫面） */

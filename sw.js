@@ -1,5 +1,5 @@
 /* 街健日誌 Service Worker — 離線快取 */
-const CACHE = 'streetlog-v3';
+const CACHE = 'streetlog-v4';
 const ASSETS = [
   './',
   './index.html',
