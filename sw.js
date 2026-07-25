@@ -1,5 +1,5 @@
 /* 街健日誌 Service Worker — 離線快取 */
-const CACHE = 'streetlog-v7';
+const CACHE = 'streetlog-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -21,19 +21,16 @@ self.addEventListener('activate', e => {
   );
 });
 
-/* 快取優先，網路後備；並回填快取 */
+/* 網路優先，離線用快取後備；線上時永遠拿到最新（改完存檔重整一次就看到）*/
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const net = fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type === 'basic') {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => cached);
-      return cached || net;
-    })
+    fetch(e.request).then(res => {
+      if (res && res.status === 200 && res.type === 'basic') {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });

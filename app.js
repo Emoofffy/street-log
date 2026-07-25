@@ -139,57 +139,37 @@ $$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
    首頁 Dashboard
    ============================================================ */
 function renderHome() {
-  const w = DB.workouts;
-  const total = w.length;
   const now = new Date();
-  const weekAgo = new Date(now - 6 * 86400000).toISOString().slice(0, 10);
-  const thisWeek = w.filter(x => x.date >= weekAgo).length;
-  const streak = calcStreak();
-  const volume = w.filter(x => x.date >= weekAgo).reduce((s, x) => s + workoutVolume(x), 0);
-
-  const skillsInProgress = DB.skills.filter(s => s.current < s.levels.length - 1).length;
-  const last = w[0];
+  const wdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const dateSm = `${now.getMonth() + 1}月${now.getDate()}`;
+  const dateLg = wdays[now.getDay()];
 
   view.innerHTML = `
-    <div class="page-head">
-      <div>
-        <h1>街健日誌</h1>
-        <div class="sub">${greeting()}${DB.profile.name ? '，' + esc(DB.profile.name) : ''} 💪</div>
+    <div class="row between" style="margin-top:4px">
+      <h1 class="jr-title">Journal</h1>
+      <button class="btn icon ghost" id="btn-settings" aria-label="設定" style="margin-top:-4px">⚙️</button>
+    </div>
+
+    <div class="jr-date-sm">${dateSm}</div>
+    <div class="jr-date-lg">${dateLg}</div>
+
+    <div class="jr-cards">
+      <div class="jr-card big" id="jr-sadhana">
+        <div class="jr-c-title">Sadhana</div>
+        <div class="jr-c-sub">四個練習<br>預估完成時間:4小時</div>
       </div>
-      <button class="btn icon ghost" id="btn-settings" aria-label="設定">⚙️</button>
+      <div class="jr-card sm physics" id="jr-physics">
+        <div class="jr-c-title">Physics</div>
+        <div class="jr-c-sub">Push + Leg day</div>
+      </div>
+      <div class="jr-card sm journal" id="jr-journal">
+        <div class="jr-c-title">Journal</div>
+        <div class="jr-c-sub">Daily Parameters</div>
+      </div>
     </div>
-
-    <div class="stat-grid">
-      <div class="stat"><div class="num accent">${streak}</div><div class="lbl">連續訓練天數 🔥</div></div>
-      <div class="stat"><div class="num">${thisWeek}</div><div class="lbl">本週訓練次數</div></div>
-      <div class="stat"><div class="num green">${total}</div><div class="lbl">累積訓練場次</div></div>
-      <div class="stat"><div class="num blue">${Math.round(volume).toLocaleString()}</div><div class="lbl">本週總量 (${DB.profile.unit})</div></div>
-    </div>
-
-    <button class="btn primary block" id="quick-start" style="margin:4px 0 6px">＋ 開始今天的訓練</button>
-
-    ${renderWeekPlan()}
-
-    <div class="section-title">最近訓練</div>
-    ${last ? workoutCard(last) : emptyBox('🏋️', '還沒有訓練紀錄', '點上面按鈕記錄第一次')}
-
-    <div class="section-title">技能進度</div>
-    ${DB.skills.length
-      ? DB.skills.slice(0, 3).map(skillMiniCard).join('')
-      : `<div class="card tap" id="add-first-skill"><div class="row between"><div><h3>🎯 選擇你要練的技能</h3><div class="muted" style="font-size:13px">前水平、俄挺、國旗、Muscle-up…</div></div><span style="font-size:22px">＋</span></div></div>`}
-    ${DB.skills.length ? `<button class="btn ghost block sm" id="more-skills">查看全部技能 →</button>` : ''}
-
-    <div class="section-title">本週亮點</div>
-    ${recentPRcard()}
   `;
 
   $('#btn-settings').onclick = openSettings;
-  $('#quick-start').onclick = () => openStartChooser();
-  const af = $('#add-first-skill'); if (af) af.onclick = () => go('skills');
-  const ms = $('#more-skills'); if (ms) ms.onclick = () => go('skills');
-  const sp = $('#setup-plan'); if (sp) sp.onclick = () => go('body');
-  $$('.wk-start').forEach(b => b.onclick = () => openWorkoutSheet(null, b.dataset.tpl));
-  bindWorkoutCards();
 }
 
 /* ---------- 本週計畫（一眼看出本週還缺什麼） ---------- */
@@ -1647,7 +1627,15 @@ function openReflectAspectSheet() {
 const RENDERERS = { home: renderHome, calendar: renderCalendar, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview, reflect: renderReflect };
 go('home');
 
-/* Service Worker（離線 + 加到主畫面） */
-if ('serviceWorker' in navigator) {
+/* Service Worker（離線 + 加到主畫面）
+   本機開發（localhost）不註冊，並清掉殘留的 SW，避免改 CSS 被舊快取卡住；
+   正式部署的網址才啟用離線快取。 */
+(() => {
+  if (!('serviceWorker' in navigator)) return;
+  const isDev = ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname);
+  if (isDev) {
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    return;
+  }
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-}
+})();
