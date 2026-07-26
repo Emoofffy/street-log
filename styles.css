@@ -68,7 +68,7 @@
 
   /* ── 陰影 ────────────────────────────────────────────── */
   --shadow-accent: 0 8px 24px var(--accent-glow);   /* FAB 浮起 */
-  --shadow-ev:     0 2px 8px var(--accent-glow2);   /* 行事曆事件 */
+  --shadow-ev:     0 2px 8px var(--accent-glow2);   /* 主色小卡片 */
   --shadow-pop:    0 8px 24px rgba(0,0,0,.5);        /* 拖曳幽靈 / 彈出 */
   --shadow-toast:  0 6px 20px rgba(0,0,0,.4);        /* 提示條 */
 
@@ -267,36 +267,6 @@ textarea { resize: vertical; min-height: 70px; }
 .tag.green { color: var(--accent-2); background: var(--green-weak); }
 .tag.gold { color: var(--gold); background: var(--gold-weak); }
 .tag.accent { color: var(--accent); background: var(--accent-weak); }
-
-/* ---------- Calendar (行事曆) ---------- */
-.cal-wrap { display: flex; gap: 10px; align-items: flex-start; }
-.cal-grid { position: relative; flex: 1; min-width: 0; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; }
-.cal-hourline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
-.cal-hlabel { position: absolute; top: -7px; left: 6px; font-size: 10px; color: var(--text-faint); background: var(--bg-elev); padding: 0 3px; font-variant-numeric: tabular-nums; }
-.cal-now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--danger); z-index: 3; }
-.cal-now::before { content: ''; position: absolute; left: 0; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
-.cal-ev {
-  position: absolute; left: 50px; right: 5px; background: linear-gradient(135deg, var(--accent), var(--accent-hi));
-  border-radius: 8px; padding: 3px 8px; color: var(--on-accent); overflow: hidden; z-index: 2;
-  box-shadow: var(--shadow-ev); touch-action: none; cursor: grab; user-select: none;
-}
-.cal-ev:active { cursor: grabbing; filter: brightness(1.08); }
-.cal-ev-t { font-size: 10px; opacity: .92; line-height: 1.2; }
-.cal-ev-txt { font-size: 12.5px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cal-palette { width: 108px; flex-shrink: 0; position: sticky; top: 8px; align-self: flex-start; }
-.cal-pal-title { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 700; }
-.cal-goal {
-  background: var(--bg-elev2); border: 1px solid var(--line); border-radius: 9px;
-  padding: 9px 10px; font-size: 12px; margin-bottom: 8px; cursor: grab;
-  touch-action: none; user-select: none; line-height: 1.25;
-}
-.cal-goal:active { border-color: var(--accent); background: var(--accent-weak); }
-.cal-ghost {
-  position: fixed; z-index: 300; transform: translate(-50%, -140%); background: var(--accent); color: var(--on-accent);
-  padding: 8px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; pointer-events: none;
-  box-shadow: var(--shadow-pop); opacity: .96; white-space: nowrap; max-width: 200px;
-  overflow: hidden; text-overflow: ellipsis;
-}
 
 .empty { text-align: center; padding: 48px 20px; color: var(--text-faint); }
 .empty .big { font-size: 46px; margin-bottom: 10px; }
