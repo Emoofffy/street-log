@@ -63,7 +63,8 @@ const SKILL_LIBRARY = [
     levels: ['屈膝支撐', 'L-sit 10s', 'L-sit 30s', 'V-sit', '直臂 Manna'] },
 ];
 
-/* 省思：預設的每日面向與引導問題（可在 App 內編輯） */
+/* 省思面向：預設的每日面向與引導問題（可在 設定 ⚙︎ → 省思面向 內編輯）
+   備忘錄的「省思格式」就是把這份表整份插進文件裡（見 note.js §省思格式）*/
 const REFLECT_ASPECTS_DEFAULT = [
   { id: 'rf_eat',    title: '進食', prompt: '今天吃得是否節制、專注？有沒有為了情緒而吃？' },
   { id: 'rf_react',  title: '回應', prompt: '遇到不如意時，我第一時間的反應是什麼？能不能更沉穩？' },
@@ -88,9 +89,9 @@ function seedDB() {
     calendar: [],       // (已停用，保留向後相容)
     program: [],        // (已停用，保留向後相容)
     notes: [],          // 備忘錄（自由書寫，見 note.js）：{id,html,created,updated}
-    reflect: {          // 每日省思：固定一套可編輯面向 + 每天一則
+    reflect: {          // 省思面向：備忘錄的「省思格式」讀這份（權威）
       aspects: REFLECT_ASPECTS_DEFAULT.map(a => ({ ...a })),
-      entries: [],      // {date,notes:{aspectId:text},updated}
+      entries: [],      // (舊版省思分頁的每日紀錄，分頁已下架，保留相容不刪使用者資料)
     },
   };
 }
@@ -115,8 +116,7 @@ function saveDB() {
 /* ============================================================
    路由 — go(tab) 切分頁，查 RENDERERS 表（見 §啟動）呼叫各節 render
    ============================================================ */
-let CURRENT = 'home';
-let REFLECT_DATE = todayISO();   // 省思分頁目前檢視的日期
+let CURRENT = 'start';
 const view = $('#view');
 
 function go(tab) {
@@ -129,6 +129,44 @@ function go(tab) {
 }
 
 $$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
+
+/* ============================================================
+   起始頁 Start — App 打開的第一個畫面：沒有底部導覽列，只有兩個出口
+   右上角頭像圓圈 → 進有導覽列的首頁；右下角 ＋ → 直接寫今天的 Journal
+   長相住 styles.css §起始頁 Start 與 :root 的 --st-*
+   ============================================================ */
+
+/* 頭像圓圈裡的預設人像（沒填名字時用；填了名字就顯示第一個字）*/
+const icoAvatar = () => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+  stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+  <circle cx="12" cy="8.4" r="3.9"/><path d="M4.6 20.2a7.6 7.6 0 0 1 14.8 0"/></svg>`;
+
+function renderStart() {
+  const now = new Date();
+  const wdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const initial = (DB.profile.name || '').trim().slice(0, 1);
+
+  view.innerHTML = `
+    <div class="st">
+      <div class="st-top">
+        <button class="st-avatar" id="st-avatar" aria-label="進入首頁">
+          ${initial ? esc(initial) : icoAvatar()}
+        </button>
+      </div>
+
+      <div class="st-hero">
+        <div class="st-date">${now.getMonth() + 1}月${now.getDate()}日　${wdays[now.getDay()]}</div>
+        <h1 class="st-title">${greeting()}</h1>
+      </div>
+
+      <button class="st-fab" id="st-new" aria-label="寫今天的 Journal">＋</button>
+    </div>
+  `;
+
+  $('#st-avatar').onclick = () => go('home');
+  // 不帶 id＝今天那則（沒有就開一則新的）；返回時回到起始頁，不會掉進首頁
+  $('#st-new').onclick = () => window.NOTE && window.NOTE.open(null, 'start');
+}
 
 /* ============================================================
    首頁 Journal（封面）— 依 iOS HIG 規格：大標題列＋群組列表目標＋入口方塊；⚙️ 進設定
@@ -1015,6 +1053,12 @@ function openSettings() {
       <div class="chips"><span class="chip unit-chip ${DB.profile.unit === 'kg' ? 'on' : ''}" data-u="kg">公斤 kg</span>
       <span class="chip unit-chip ${DB.profile.unit === 'lb' ? 'on' : ''}" data-u="lb">磅 lb</span></div></label>
 
+    <div class="section-title">省思面向</div>
+    <div class="card" style="font-size:13px">
+      <p style="margin:0 0 10px;color:var(--text-dim)">備忘錄裡按「省思」插進來的那份題目表。</p>
+      <button class="btn block" id="asp-btn">🪞 編輯省思面向</button>
+    </div>
+
     <div class="section-title">資料備份</div>
     <div class="card" style="font-size:13px" class="muted">
       <p style="margin:0 0 10px;color:var(--text-dim)">資料只存在這支手機。換機或清除瀏覽器前，記得先匯出備份。</p>
@@ -1030,6 +1074,7 @@ function openSettings() {
     $('#close-set', sheet).onclick = closeSheet;
     $('#set-name', sheet).oninput = e => { DB.profile.name = e.target.value; saveDB(); };
     $$('.unit-chip', sheet).forEach(c => c.onclick = () => { DB.profile.unit = c.dataset.u; saveDB(); c.parentElement.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); });
+    $('#asp-btn', sheet).onclick = openReflectAspectSheet;
     $('#export-btn', sheet).onclick = exportData;
     $('#import-btn', sheet).onclick = () => $('#import-file', sheet).click();
     $('#import-file', sheet).onchange = e => importData(e.target.files[0]);
@@ -1038,6 +1083,43 @@ function openSettings() {
       if (!confirm('真的要清除嗎？建議先匯出備份。')) return;
       localStorage.removeItem(KEY); DB = seedDB(); closeSheet(); toast('已重置'); go('home');
     };
+  });
+}
+
+/* 省思面向：新增 / 改標題 / 改問題 / 刪除
+   （面向表＝DB.reflect.aspects，備忘錄的「省思格式」讀同一份，見 note.js §省思格式）*/
+function openReflectAspectSheet() {
+  const draft = DB.reflect.aspects.map(a => ({ ...a }));
+  const body = () => `
+    <div class="sheet-head"><h2>省思面向</h2></div>
+    <div class="muted" style="font-size:13px;margin:0 0 12px">在備忘錄按「省思」時，會把這些項目與引導問題整份插進去。</div>
+    <div id="rf-asp-list">
+      ${draft.map((a, i) => `
+        <div class="rf-asp-row" data-i="${i}">
+          <div class="rf-asp-top">
+            <input class="rf-asp-title" data-i="${i}" value="${esc(a.title)}" placeholder="面向名稱" />
+            <button class="btn sm danger" data-del="${i}">✕</button>
+          </div>
+          <textarea class="rf-asp-prompt" data-i="${i}" rows="2" placeholder="引導問題（選填）">${esc(a.prompt || '')}</textarea>
+        </div>`).join('')}
+    </div>
+    <button class="btn ghost block sm" id="rf-asp-add" style="margin-top:8px">＋ 新增面向</button>
+    <button class="btn primary block" id="rf-asp-save" style="margin-top:14px">儲存</button>
+  `;
+  openSheet(body(), sheet => {
+    function wire() {
+      $$('.rf-asp-title', sheet).forEach(inp => inp.oninput = () => { draft[+inp.dataset.i].title = inp.value; });
+      $$('.rf-asp-prompt', sheet).forEach(inp => inp.oninput = () => { draft[+inp.dataset.i].prompt = inp.value; });
+      $$('[data-del]', sheet).forEach(b => b.onclick = () => { draft.splice(+b.dataset.del, 1); rerender(); });
+      $('#rf-asp-add', sheet).onclick = () => { draft.push({ id: 'rf_' + uid(), title: '', prompt: '' }); rerender(); };
+      $('#rf-asp-save', sheet).onclick = () => {
+        const clean = draft.filter(a => a.title.trim());
+        DB.reflect.aspects = clean.map(a => ({ id: a.id, title: a.title.trim(), prompt: (a.prompt || '').trim() }));
+        saveDB(); closeSheet(); toast('已更新面向');
+      };
+    }
+    function rerender() { sheet.innerHTML = body(); wire(); }
+    wire();
   });
 }
 
@@ -1302,251 +1384,10 @@ function sparkline(values, color = '#f5c451') {
 }
 
 /* ============================================================
-   省思 Reflect — 每日書寫編輯器（自由文字 + 可插入的互動省思格式）
-   ============================================================ */
-let _rfScrollHandler = null;      // 掛在 window 上的捲動監聽（同步頂部主題高亮）
-let _rfSaveTimer = null;
-
-function rfNewText() { return { id: 'b' + uid(), type: 'text', text: '' }; }
-function rfNewReflect() {
-  return {
-    id: 'b' + uid(), type: 'reflect',
-    rows: DB.reflect.aspects.map(a => ({ aspectId: a.id, title: a.title, prompt: a.prompt, text: '' })),
-  };
-}
-/* 把舊版 {notes:{aid:text}} 資料轉成一個「省思格式」區塊 */
-function rfMigrate(e) {
-  if (!e || e.blocks) return e;
-  const rows = DB.reflect.aspects.map(a => ({ aspectId: a.id, title: a.title, prompt: a.prompt, text: (e.notes && e.notes[a.id]) || '' }));
-  e.blocks = [{ id: 'b' + uid(), type: 'reflect', rows }];
-  delete e.notes;
-  return e;
-}
-function rfEntry(date, create) {
-  let e = DB.reflect.entries.find(x => x.date === date);
-  if (e) return rfMigrate(e);
-  if (create) { e = { date, blocks: [rfNewText()], updated: Date.now() }; DB.reflect.entries.push(e); }
-  return e;
-}
-function rfSaveSoon() {
-  clearTimeout(_rfSaveTimer);
-  _rfSaveTimer = setTimeout(saveDB, 400);
-}
-function rfFilledCount(e) {
-  if (!e || !e.blocks) return 0;
-  let n = 0;
-  e.blocks.forEach(b => {
-    if (b.type === 'text') { if (b.text && b.text.trim()) n++; }
-    else if (b.type === 'reflect') (b.rows || []).forEach(r => { if (r.text && r.text.trim()) n++; });
-  });
-  return n;
-}
-
-function renderReflect() {
-  if (_rfScrollHandler) { window.removeEventListener('scroll', _rfScrollHandler); _rfScrollHandler = null; }
-
-  const isToday = REFLECT_DATE === todayISO();
-  // 今天一開啟就給一個可立即打字的段落（未輸入前不會存檔，不留空白紀錄）
-  const entry = rfEntry(REFLECT_DATE, isToday);
-  const blocks = entry ? entry.blocks : [];
-
-  // 頂部主題：彙整文件裡所有「省思格式」區塊的列
-  const topics = [];
-  blocks.forEach(b => { if (b.type === 'reflect') (b.rows || []).forEach(r => topics.push({ id: `rfrow-${b.id}-${r.aspectId}`, title: r.title })); });
-
-  const timeStr = entry && entry.updated
-    ? new Date(entry.updated).toLocaleTimeString('zh-Hant', { hour: '2-digit', minute: '2-digit', hour12: false })
-    : '';
-  const dateLine = `${fmtDate(REFLECT_DATE)}${isToday ? ' · 今天' : ''}${timeStr ? ' · ' + timeStr : ''}`;
-
-  const history = [...DB.reflect.entries]
-    .filter(e => rfFilledCount(rfMigrate(e)) > 0)
-    .sort((a, b) => b.date.localeCompare(a.date));
-
-  view.innerHTML = `
-    <div class="page-head"><div><h1>省思</h1><div class="sub">自由書寫 · 隨手插入省思格式</div></div>
-      ${isToday ? '' : `<button class="btn ghost sm" id="rf-today">回到今天</button>`}</div>
-
-    ${topics.length ? `<div class="rf-strip" id="rf-strip">
-      ${topics.map(t => `<button class="rf-tab" data-target="${t.id}">${esc(t.title)}</button>`).join('')}
-    </div>` : ''}
-
-    <div class="rf-datebar">${dateLine}</div>
-
-    <div class="rf-doc" id="rf-doc">
-      ${blocks.length ? blocks.map(renderBlock).join('')
-        : emptyBox('🪞', '空白的一天', '在下面開始打字，或插入省思格式')}
-    </div>
-
-    <div class="rf-insert">
-      <button class="chip" id="ins-text">＋ 文字段落</button>
-      <button class="chip" id="ins-reflect">＋ 省思格式</button>
-      <button class="chip" id="ins-manage">⚙︎ 面向</button>
-    </div>
-
-    ${history.length ? `
-      <div class="section-title">歷史回顧</div>
-      ${history.slice(0, 30).map(e => `
-        <div class="li rf-hist${e.date === REFLECT_DATE ? ' on' : ''}" data-date="${e.date}">
-          <div class="badge">🪞</div>
-          <div class="grow"><b>${fmtDate(e.date)}</b>
-            <div class="faint" style="font-size:12px">${rfFilledCount(e)} 則 · ${esc(rfSnippet(e))}</div></div>
-          <button class="btn sm danger" data-rfdel="${e.date}">✕</button>
-        </div>`).join('')}` : ''}
-  `;
-
-  // 自動長高 + 即時儲存（文字段落與省思格式的每一格）
-  $$('.rf-text, .rf-cell', view).forEach(ta => {
-    autoGrowTA(ta);
-    ta.addEventListener('input', () => {
-      autoGrowTA(ta);
-      const e = rfEntry(REFLECT_DATE, true);
-      const blk = e.blocks.find(b => b.id === ta.dataset.bid);
-      if (!blk) return;
-      if (blk.type === 'text') blk.text = ta.value;
-      else { const row = (blk.rows || []).find(r => r.aspectId === ta.dataset.aid); if (row) row.text = ta.value; }
-      e.updated = Date.now();
-      rfSaveSoon();
-    });
-  });
-
-  // 頂部主題 → 捲到對應列並聚焦（點上方自動跳到下方編輯區）
-  $$('.rf-tab', view).forEach(t => t.addEventListener('click', () => {
-    const el = document.getElementById(t.dataset.target);
-    if (!el) return;
-    const y = window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.24;
-    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-    const ta = $('.rf-cell', el);
-    if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 320);
-  }));
-
-  // 移除區塊
-  $$('[data-delblock]', view).forEach(b => b.addEventListener('click', () => {
-    const e = rfEntry(REFLECT_DATE, false); if (!e) return;
-    const blk = e.blocks.find(x => x.id === b.dataset.delblock);
-    const hasText = blk && (blk.type === 'text' ? blk.text.trim() : (blk.rows || []).some(r => r.text.trim()));
-    if (hasText && !confirm('這個區塊有內容，確定移除？')) return;
-    e.blocks = e.blocks.filter(x => x.id !== b.dataset.delblock);
-    e.updated = Date.now(); saveDB(); renderReflect();
-  }));
-
-  // 插入區塊
-  $('#ins-text', view).onclick = () => { const e = rfEntry(REFLECT_DATE, true); e.blocks.push(rfNewText()); e.updated = Date.now(); saveDB(); renderReflect(); rfFocusLast('.rf-text'); };
-  $('#ins-reflect', view).onclick = () => { const e = rfEntry(REFLECT_DATE, true); e.blocks.push(rfNewReflect()); e.updated = Date.now(); saveDB(); renderReflect(); rfFocusLast('.rf-block.reflect', true); };
-  $('#ins-manage', view).onclick = openReflectAspectSheet;
-
-  // 歷史：回看 / 刪除
-  $$('.rf-hist', view).forEach(row => row.addEventListener('click', e => {
-    if (e.target.closest('[data-rfdel]')) return;
-    REFLECT_DATE = row.dataset.date; renderReflect(); window.scrollTo({ top: 0 });
-  }));
-  $$('[data-rfdel]', view).forEach(b => b.addEventListener('click', () => {
-    if (!confirm(`刪除 ${fmtDate(b.dataset.rfdel)} 這則？`)) return;
-    DB.reflect.entries = DB.reflect.entries.filter(e => e.date !== b.dataset.rfdel);
-    if (REFLECT_DATE === b.dataset.rfdel) REFLECT_DATE = todayISO();
-    saveDB(); renderReflect();
-  }));
-
-  if (!isToday) $('#rf-today').onclick = () => { REFLECT_DATE = todayISO(); renderReflect(); window.scrollTo({ top: 0 }); };
-
-  // 捲動時同步頂部主題高亮
-  _rfScrollHandler = () => rfSyncActiveChip();
-  window.addEventListener('scroll', _rfScrollHandler, { passive: true });
-  requestAnimationFrame(rfSyncActiveChip);
-}
-
-function renderBlock(b) {
-  if (b.type === 'text') {
-    return `<div class="rf-block text" data-bid="${b.id}">
-      <textarea class="rf-text" data-bid="${b.id}" rows="1" placeholder="寫點什麼…">${esc(b.text || '')}</textarea>
-      <button class="rf-del" data-delblock="${b.id}" title="刪除段落">✕</button>
-    </div>`;
-  }
-  return `<div class="rf-block reflect" data-bid="${b.id}">
-    <div class="rf-block-head"><span>🪞 每日省思</span><button class="rf-del" data-delblock="${b.id}" title="移除區塊">✕</button></div>
-    <div class="rf-table">
-      ${(b.rows || []).map(r => `
-        <div class="rf-row" id="rfrow-${b.id}-${r.aspectId}">
-          <div class="rf-row-topic">${esc(r.title)}</div>
-          <textarea class="rf-cell" data-bid="${b.id}" data-aid="${r.aspectId}" rows="1" placeholder="${esc(r.prompt || '')}">${esc(r.text || '')}</textarea>
-        </div>`).join('')}
-    </div>
-  </div>`;
-}
-
-function rfFocusLast(sel, scrollOnly) {
-  const els = $$(sel, view); const el = els[els.length - 1]; if (!el) return;
-  const y = window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.30;
-  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-  if (!scrollOnly) { const ta = el.matches('textarea') ? el : $('textarea', el); if (ta) setTimeout(() => ta.focus({ preventScroll: true }), 320); }
-}
-
-function rfSnippet(e) {
-  let s = '';
-  for (const b of (e.blocks || [])) {
-    if (b.type === 'text' && b.text && b.text.trim()) { s = b.text; break; }
-    if (b.type === 'reflect') { const r = (b.rows || []).find(r => r.text && r.text.trim()); if (r) { s = r.text; break; } }
-  }
-  s = s.trim().replace(/\s+/g, ' ');
-  return s.length > 20 ? s.slice(0, 20) + '…' : s;
-}
-
-function autoGrowTA(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = ta.scrollHeight + 'px';
-}
-
-// 捲動時，讓最靠近焦點線的主題列對應的頂部 tab 高亮
-function rfSyncActiveChip() {
-  if (CURRENT !== 'reflect') return;
-  const rows = $$('.rf-row', view); if (!rows.length) return;
-  const focal = window.innerHeight * 0.32;
-  let best = null, bestD = Infinity;
-  rows.forEach(r => { const bb = r.getBoundingClientRect(); const c = bb.top + bb.height / 2; const d = Math.abs(c - focal); if (d < bestD) { bestD = d; best = r; } });
-  if (best) $$('.rf-tab', view).forEach(t => t.classList.toggle('on', t.dataset.target === best.id));
-}
-
-/* 管理面向：新增 / 改標題 / 改問題 / 刪除 */
-function openReflectAspectSheet() {
-  const draft = DB.reflect.aspects.map(a => ({ ...a }));
-  const body = () => `
-    <div class="sheet-head"><h2>管理面向</h2></div>
-    <div class="muted" style="font-size:13px;margin:0 0 12px">這些是每天都會出現的省思項目與引導問題。</div>
-    <div id="rf-asp-list">
-      ${draft.map((a, i) => `
-        <div class="rf-asp-row" data-i="${i}">
-          <div class="rf-asp-top">
-            <input class="rf-asp-title" data-i="${i}" value="${esc(a.title)}" placeholder="面向名稱" />
-            <button class="btn sm danger" data-del="${i}">✕</button>
-          </div>
-          <textarea class="rf-asp-prompt" data-i="${i}" rows="2" placeholder="引導問題（選填）">${esc(a.prompt || '')}</textarea>
-        </div>`).join('')}
-    </div>
-    <button class="btn ghost block sm" id="rf-asp-add" style="margin-top:8px">＋ 新增面向</button>
-    <button class="btn primary block" id="rf-asp-save" style="margin-top:14px">儲存</button>
-  `;
-  openSheet(body(), sheet => {
-    function wire() {
-      $$('.rf-asp-title', sheet).forEach(inp => inp.oninput = () => { draft[+inp.dataset.i].title = inp.value; });
-      $$('.rf-asp-prompt', sheet).forEach(inp => inp.oninput = () => { draft[+inp.dataset.i].prompt = inp.value; });
-      $$('[data-del]', sheet).forEach(b => b.onclick = () => { draft.splice(+b.dataset.del, 1); rerender(); });
-      $('#rf-asp-add', sheet).onclick = () => { draft.push({ id: 'rf_' + uid(), title: '', prompt: '' }); rerender(); };
-      $('#rf-asp-save', sheet).onclick = () => {
-        const clean = draft.filter(a => a.title.trim());
-        DB.reflect.aspects = clean.map(a => ({ id: a.id, title: a.title.trim(), prompt: (a.prompt || '').trim() }));
-        saveDB(); closeSheet(); renderReflect(); toast('已更新面向');
-      };
-    }
-    function rerender() { sheet.innerHTML = body(); wire(); }
-    wire();
-  });
-}
-
-/* ============================================================
    啟動 — 首次渲染＋SW 註冊（localhost 跳過並清掉 SW）
    ============================================================ */
-const RENDERERS = { home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview, reflect: renderReflect };
-go('home');
+const RENDERERS = { start: renderStart, home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview };
+go('start');
 
 /* Service Worker（離線 + 加到主畫面）
    本機開發（localhost）不註冊，並清掉殘留的 SW，避免改 CSS 被舊快取卡住；

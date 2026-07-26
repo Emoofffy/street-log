@@ -130,6 +130,7 @@ function stampFull(ms) {
    進入編輯頁時 body 加 .nt-on（藏底部導覽、換底色），離開就回首頁
    ============================================================ */
 let CUR = null;             // 正在編輯的備忘錄 id
+let BACK = 'home';          // 離開編輯頁要回哪一頁（起始頁進來的就回起始頁）
 let EDITING = false;        // 首頁區塊的「編輯」模式（露出刪除鈕，給不方便左滑的裝置）
 let EXPAND = false;         // 首頁區塊是否展開全部（預設只列最近幾則）
 let saveTimer = null;
@@ -148,9 +149,11 @@ function teardown() {
   }
 }
 
-/* 開一則來編輯（沒給 id 就開今天那則，沒有就建一則今天的）*/
-function open(id) {
+/* 開一則來編輯（沒給 id 就開今天那則，沒有就建一則今天的）
+   back＝離開時回哪一頁，預設回首頁；起始頁的 ＋ 會傳 'start' */
+function open(id, back) {
   CUR = id || todayNote().id;
+  BACK = back || 'home';
   document.body.classList.add('nt-on');
   renderEdit(document.getElementById('view'));
 }
@@ -161,7 +164,7 @@ function close() {
   teardown();
   CUR = null;
   document.body.classList.remove('nt-on', 'nt-kb');
-  go('home');
+  go(BACK);
 }
 
 /* 首頁 Journal 卡進來的是「今天這一則」：同一天再點是續寫，不會每次開新的 */
@@ -290,12 +293,12 @@ function swipeRow(row) {
    ============================================================ */
 function renderEdit(v) {
   const n = byId(CUR);
-  if (!n) { CUR = null; return go('home'); }
+  if (!n) { CUR = null; return go(BACK); }
 
   v.innerHTML = `
     <div class="nt nt-edit-page nt-in-fwd">
       <div class="nt-nav">
-        <button class="nt-btn back" id="nt-back">${chevL()}首頁</button>
+        <button class="nt-btn back" id="nt-back">${chevL()}${BACK === 'home' ? '首頁' : '返回'}</button>
         <div class="nt-nav-t"></div>
         <button class="nt-btn r done" id="nt-done">完成</button>
       </div>
@@ -501,9 +504,9 @@ function cmd(name, body) {
 }
 
 /* ============================================================
-   省思格式 — 把 §省思 的面向表（DB.reflect.aspects 是權威）整份插進來
+   省思格式 — 把面向表（DB.reflect.aspects 是權威）整份插進來
    一個面向＝兩個相鄰區塊：.nt-rf-t 題目 ＋ .nt-rf-a 作答（空的時候顯示引導問題）
-   面向要增刪改，去省思分頁的「⚙︎ 面向」，這裡永遠拿當下那份
+   面向要增刪改，去首頁 ⚙︎ 設定的「省思面向」，這裡永遠拿當下那份
    ============================================================ */
 function aspects() {
   return (DB.reflect && DB.reflect.aspects) || [];
@@ -511,7 +514,7 @@ function aspects() {
 
 function insertReflect(body) {
   const list = aspects();
-  if (!list.length) { toast('還沒有省思面向，先到省思分頁設定'); return; }
+  if (!list.length) { toast('還沒有省思面向，先到首頁 ⚙︎ 設定裡新增'); return; }
   const hold = document.createElement('div');
   hold.innerHTML = `<div class="nt-rf">${list.map(a =>
     `<div class="nt-rf-row nt-off">` +

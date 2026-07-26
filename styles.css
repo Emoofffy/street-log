@@ -56,17 +56,18 @@
   --ap-green:   #30d158;               /* systemGreen（深色版）＝完成 */
 
   /* 字級／行高（SF Pro 標準級距，單位 pt≒px）
-     現在用的是 Dynamic Type 的 xSmall 那一階＝iOS 文字大小拉到最小。
-     整套要放大回 iOS 預設（Large），把每一行換成右邊註解的數字即可：
-       Large Title 31/38 → 34/41 ｜ Title2 19/24 → 22/28
-       Body 14/19 → 17/22 ｜ Subheadline 12/16 → 15/20 ｜ Footnote 12/16 → 13/18
+     現在用的是 Dynamic Type 的 Large 那一階＝iOS 出廠預設，
+     也就是備忘錄編輯頁那份規格（內文 17px）所在的級距——封面與備忘錄因此同一個大小。
+     整套要縮回最小（xSmall），把每一行換成右邊註解的數字即可：
+       Large Title 34/41 → 31/38 ｜ Title2 22/28 → 19/24
+       Body 17/22 → 14/19 ｜ Subheadline 15/20 → 12/16 ｜ Footnote 13/18 → 12/16
      這是蘋果自己的尺寸表，中間不要插入自訂數值。 */
-  --ap-lg-title: 31px;  --ap-lg-title-lh: 38px;  /* Large Title */
-  --ap-title2:   19px;  --ap-title2-lh:   24px;  /* Title 2：大方塊標題 */
-  --ap-body:     14px;  --ap-body-lh:     19px;  /* Body / Headline */
-  --ap-subhead:  12px;  --ap-subhead-lh:  16px;  /* Subheadline */
-  --ap-foot:     12px;  --ap-foot-lh:     16px;  /* Footnote：群組表頭 */
-  --ap-cap:      11px;  --ap-cap-lh:      13px;  /* Caption：待補、字數這種附註 */
+  --ap-lg-title: 34px;  --ap-lg-title-lh: 41px;  /* Large Title */
+  --ap-title2:   22px;  --ap-title2-lh:   28px;  /* Title 2：大方塊標題 */
+  --ap-body:     17px;  --ap-body-lh:     22px;  /* Body / Headline＝備忘錄內文同級 */
+  --ap-subhead:  15px;  --ap-subhead-lh:  20px;  /* Subheadline */
+  --ap-foot:     13px;  --ap-foot-lh:     18px;  /* Footnote：群組表頭 */
+  --ap-cap:      12px;  --ap-cap-lh:      16px;  /* Caption：待補、字數這種附註 */
 
   /* 版面（8pt 節奏）*/
   --ap-margin:  16px;   /* 螢幕左右邊界 */
@@ -81,6 +82,16 @@
   --jr-card:    #2a2a2d; /* Sadhana 灰卡 */
   --jr-physics: #4d2529; /* Physics 暗紅卡 */
   --jr-journal: #29314d; /* Journal 暗藍卡 */
+
+  /* ── 起始頁 Start（打開 App 的第一個畫面：沒有導覽列，只有頭像與 ＋）──── */
+  --st-bg:        #000000;  /* 起始頁底色 */
+  --st-title:     #ffffff;  /* 大字 */
+  --st-dim:       rgba(235,235,245,.60);  /* 日期那行 */
+  --st-avatar-bg: rgba(118,118,128,.24);  /* 右上頭像圓圈的底 */
+  --st-avatar-sz: 40px;     /* 頭像圓圈直徑 */
+  --st-fab-bg:    var(--accent);          /* 右下新增鈕的底色 */
+  --st-fab-fg:    var(--on-accent);       /* 右下新增鈕的字色 */
+  --st-fab-sz:    60px;     /* 右下新增鈕直徑 */
 
   /* ── Sadhana（修練頁自成一個世界，色調比 App 其他頁更靜）──── */
   --sd-bg:      #1c1c1e;  /* 修練頁底 */
@@ -335,81 +346,7 @@ textarea { resize: vertical; min-height: 70px; }
 }
 @keyframes toastin { from { opacity: 0; transform: translate(-50%, 8px);} to { opacity:1; transform: translateX(-50%);} }
 
-/* ---------- 省思 Reflect（沉浸式每日內省） ---------- */
-.rf-strip {
-  position: sticky; top: calc(var(--safe-t)); z-index: 10;
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  padding: 6px 0 10px; margin: 0 -16px 2px; padding-left: 16px; padding-right: 16px;
-  background: linear-gradient(to bottom, var(--bg) 62%, transparent);
-  -webkit-overflow-scrolling: touch;
-}
-.rf-strip::-webkit-scrollbar { display: none; }
-.rf-tab {
-  flex: 0 0 auto; background: none; border: none; cursor: pointer;
-  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-faint);
-  padding: 2px 2px 6px; position: relative; transition: color .15s;
-}
-.rf-tab.filled::after {
-  content: ''; position: absolute; top: 2px; right: -4px;
-  width: 5px; height: 5px; border-radius: 50%; background: var(--accent-2);
-}
-.rf-tab.on { color: var(--text); font-weight: 800; }
-
-.rf-datebar {
-  text-align: center; color: var(--text-faint); font-size: 12.5px;
-  letter-spacing: .3px; margin: 4px 0 20px;
-}
-
-/* 文件式編輯器 */
-.rf-doc { display: flex; flex-direction: column; gap: 2px; }
-.rf-block { position: relative; }
-.rf-block.text { padding: 2px 0; }
-.rf-block .rf-del {
-  position: absolute; top: 4px; right: 0; background: none; border: none;
-  color: var(--text-faint); font-size: 13px; cursor: pointer;
-  opacity: 0; transition: opacity .15s; padding: 4px 6px;
-}
-.rf-block:focus-within .rf-del, .rf-block:hover .rf-del { opacity: .7; }
-.rf-text {
-  width: 100%; box-sizing: border-box; background: none; border: none; outline: none;
-  resize: none; overflow: hidden; color: var(--text); font-family: inherit;
-  font-size: 17px; line-height: 1.75; padding: 6px 22px 6px 0; min-height: 1.75em;
-}
-.rf-text::placeholder { color: var(--text-faint); }
-
-/* 可互動的「省思格式」表格區塊 */
-.rf-block.reflect {
-  background: var(--bg-elev); border: 1px solid var(--line);
-  border-radius: 14px; margin: 10px 0; overflow: hidden;
-}
-.rf-block-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 14px; font-size: 12px; font-weight: 700; letter-spacing: .4px;
-  color: var(--text-dim); background: var(--bg-elev2); border-bottom: 1px solid var(--line);
-}
-.rf-block-head .rf-del { position: static; opacity: .55; }
-.rf-table { display: flex; flex-direction: column; }
-.rf-row {
-  display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: start;
-  padding: 12px 14px; border-bottom: 1px solid var(--line); transition: background .15s;
-}
-.rf-row:last-child { border-bottom: none; }
-.rf-row:focus-within { background: var(--accent-faint); }
-.rf-row-topic { font-size: 14px; font-weight: 700; color: var(--text-dim); padding-top: 3px; }
-.rf-row:focus-within .rf-row-topic { color: var(--text); }
-.rf-cell {
-  width: 100%; box-sizing: border-box; background: none; border: none; outline: none;
-  resize: none; overflow: hidden; color: var(--text); font-family: inherit;
-  font-size: 15.5px; line-height: 1.6; padding: 1px 0; min-height: 1.6em;
-}
-.rf-cell::placeholder { color: var(--text-faint); }
-
-.rf-insert { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
-.rf-insert .chip { cursor: pointer; }
-
-.rf-hist.on { border-color: var(--accent); }
-
-/* 管理面向 sheet */
+/* ---------- 省思面向 sheet（從首頁 ⚙︎ 設定進入；面向表給備忘錄的省思格式用）---------- */
 .rf-asp-row {
   background: var(--bg-elev2); border: 1px solid var(--line);
   border-radius: 12px; padding: 10px; margin-bottom: 10px;
@@ -426,10 +363,59 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   起始頁 Start — App 的第一個畫面：沒有底部導覽列
+   右上頭像圓圈＝進首頁（有導覽列的世界），右下 ＋＝直接寫今天的 Journal
+   顏色與尺寸全在 :root 的 --st-*，改設計動那裡就好
+   ══════════════════════════════════════════════════════════════════ */
+body[data-tab="start"] { background: var(--st-bg); }
+body[data-tab="start"] .tabbar { display: none; }     /* 起始頁沒有導覽列 */
+body[data-tab="start"] .view {
+  padding: calc(var(--safe-t) + 12px) var(--ap-margin) calc(24px + var(--safe-b));
+}
+
+.st { letter-spacing: -.01em; }               /* 字距跟備忘錄那頁同值 */
+.st button { letter-spacing: inherit; }       /* button 預設會被重設成 normal，要接回來 */
+.st { min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 36px); display: flex; flex-direction: column; }
+.st-top { display: flex; justify-content: flex-end; }
+
+.st-avatar {                                  /* 右上角頭像圓圈（外圍撐到 44pt 可點）*/
+  width: var(--st-avatar-sz); height: var(--st-avatar-sz); border: 0; border-radius: 50%;
+  background: var(--st-avatar-bg); color: var(--st-title); cursor: pointer;
+  display: grid; place-items: center; overflow: hidden;
+  font-family: inherit; font-size: 17px; font-weight: 600;
+  transition: transform .12s ease, filter .15s;
+}
+.st-avatar:active { transform: scale(.94); filter: brightness(1.25); }
+
+.st-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-bottom: 12%; }
+.st-date {
+  font-size: var(--ap-foot); line-height: var(--ap-foot-lh);
+  color: var(--st-dim); font-weight: 600;
+}
+.st-title {
+  font-size: var(--ap-lg-title); line-height: var(--ap-lg-title-lh);
+  font-weight: 700; letter-spacing: .37px; color: var(--st-title); margin: 4px 0 0;
+}
+
+.st-fab {                                     /* 右下角新增鈕：直接建立今天的 Journal */
+  position: fixed; right: var(--ap-margin); bottom: calc(24px + var(--safe-b));
+  width: var(--st-fab-sz); height: var(--st-fab-sz); border: 0; border-radius: 50%;
+  background: var(--st-fab-bg); color: var(--st-fab-fg); cursor: pointer;
+  font-family: inherit; font-size: 30px; line-height: 1; font-weight: 400;
+  display: grid; place-items: center; box-shadow: var(--shadow-accent);
+  transition: transform .12s ease, filter .15s;
+}
+.st-fab:active { transform: scale(.93); filter: brightness(1.08); }
+
+/* ══════════════════════════════════════════════════════════════════
    首頁封面 Cover — 照 iOS HIG 規格做：大標題列、群組列表、44pt 觸控
    數值全來自 :root 的 --ap-*，那一組是抄蘋果的，別在這裡另外寫死
    ══════════════════════════════════════════════════════════════════ */
 body[data-tab="home"] { background: var(--ap-bg); }   /* 封面用系統群組黑 */
+/* 字距跟備忘錄那頁同一個值（.nt），兩頁的字放在一起才看不出接縫
+   （按鈕要另外寫：瀏覽器預設會把 button 的字距重設成 normal，不吃繼承）*/
+body[data-tab="home"] .view { letter-spacing: -.01em; }
+body[data-tab="home"] .view button { letter-spacing: inherit; }
 
 /* ---------- 大標題列（日期在上、Large Title 在下、圓鈕靠右）---------- */
 .cv-head { margin: 4px 0 6px; }
@@ -449,11 +435,12 @@ body[data-tab="home"] { background: var(--ap-bg); }   /* 封面用系統群組�
 }
 .cv-gear:active { background: var(--ap-fill2); }
 
-/* ---------- 群組區塊（表頭 ＋ 卡片）---------- */
-.cv-sec { margin-top: 28px; }
+/* ---------- 群組區塊（表頭 ＋ 卡片）----------
+   區塊上緣 26px、表頭下 8px：跟備忘錄區塊（.nt-sec / .nt-sec-head）同一組間距 */
+.cv-sec { margin-top: 26px; }
 .cv-sec-hd {
   display: flex; align-items: baseline; justify-content: space-between;
-  gap: 10px; padding: 0 4px; margin-bottom: 7px;
+  gap: 10px; padding: 0 4px; margin-bottom: 8px;
 }
 .cv-sec-t { font-size: var(--ap-foot); line-height: var(--ap-foot-lh); color: var(--ap-label2); }
 .cv-sec-v {
@@ -502,7 +489,7 @@ body[data-tab="home"] { background: var(--ap-bg); }   /* 封面用系統群組�
 }
 
 /* ---------- 三個入口方塊（顏色是品牌的，幾何是蘋果的）---------- */
-.jr-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 28px; }
+.jr-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
 .jr-card {
   border-radius: var(--jr-tile-radius); padding: var(--ap-margin); cursor: pointer;
   display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
