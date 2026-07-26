@@ -144,6 +144,18 @@ function renderHome() {
   const dateSm = `${now.getMonth() + 1}月${now.getDate()}`;
   const dateLg = wdays[now.getDay()];
 
+  // Sadhana 卡即時狀態（sadhana.js 提供）
+  const sd = window.SADHANA ? window.SADHANA.homeSummary() : null;
+  let sdSub, sdCta = '';
+  if (!sd) sdSub = '每日修練';
+  else if (!sd.awake) { sdSub = '今天還沒開始'; sdCta = '醒了'; }
+  else if (!sd.up) { sdSub = `${sd.wakeAt} 醒　·　躺著 ${sd.lying} 分`; sdCta = '起身'; }
+  else if (sd.running) sdSub = `${esc(sd.running)}　進行中`;
+  else sdSub = `${sd.done} / ${sd.total}　·　已練 ${sd.mins >= 60
+    ? Math.floor(sd.mins / 60) + 'h' + String(sd.mins % 60).padStart(2, '0') : sd.mins + ' 分'}`
+    + (sd.pending ? `<br><span class="jr-pend">${sd.pending} 筆待補</span>` : '');
+  if (sd && sd.up && !sd.running && sd.next) sdCta = `▶　${sd.next}`;
+
   view.innerHTML = `
     <div class="row between" style="margin-top:4px">
       <h1 class="jr-title">Journal</h1>
@@ -154,9 +166,10 @@ function renderHome() {
     <div class="jr-date-lg">${dateLg}</div>
 
     <div class="jr-cards">
-      <div class="jr-card big" id="jr-sadhana">
+      <div class="jr-card big${sd && sd.running ? ' running' : ''}" id="jr-sadhana">
         <div class="jr-c-title">Sadhana</div>
-        <div class="jr-c-sub">四個練習<br>預估完成時間:4小時</div>
+        <div class="jr-c-sub">${sdSub}</div>
+        ${sdCta ? `<div class="jr-cta" id="jr-sd-cta">${esc(sdCta)}</div>` : ''}
       </div>
       <div class="jr-card sm physics" id="jr-physics">
         <div class="jr-c-title">Physics</div>
@@ -170,6 +183,9 @@ function renderHome() {
   `;
 
   $('#btn-settings').onclick = openSettings;
+  $('#jr-sadhana').onclick = () => window.SADHANA && window.SADHANA.open();
+  const sdCtaEl = $('#jr-sd-cta');
+  if (sdCtaEl) sdCtaEl.onclick = e => { e.stopPropagation(); window.SADHANA.cta(); };
 }
 
 /* ---------- 本週計畫（一眼看出本週還缺什麼） ---------- */

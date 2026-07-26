@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>浮動作息與錨點</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,3vw,32px) 46px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;align-items:flex-start}
+.col{width:min(392px,100%)}
+.cap{font-size:12.5px;color:#7a828e;margin-bottom:4px}
+.cap b{color:#e8ecf3;font-weight:600}
+.cap2{font-size:11.5px;color:#565d68;margin-bottom:11px;line-height:1.6}
+.phone{width:100%;height:838px;border-radius:32px;border:1px solid #222732;background:#0b0d11;
+  overflow:hidden;position:relative;padding:20px 18px}
+.hd{font-size:11px;color:#5d6470;letter-spacing:3px}
+.hd2{font-size:22px;color:#e8ecf3;font-weight:600;margin-top:4px}
+.hd3{font-size:12px;color:#6b7480;margin-top:3px}
+svg{display:block}
+.note{width:min(814px,100%);margin:26px auto 0;background:#0e1116;border:1px solid #1e232c;
+  border-radius:16px;padding:18px 22px;font-size:12.5px;color:#8d95a2;line-height:2}
+.note b{color:#e8ecf3}
+.note em{color:#f5c451;font-style:normal}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cap"><b>早練日</b>　六點十二起床，一路練到九點半</div>
+    <div class="cap2">左邊細軸：練習全擠在早上。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十五</div>
+      <div class="hd3">練習 4h12　·　13 / 13</div>
+      <svg id="a" viewBox="0 0 356 712" style="margin-top:12px"></svg>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>晚練日</b>　七點四十才醒，被 Brunch 切成兩半</div>
+    <div class="cap2">左邊細軸：形狀完全不同，練習散到下午。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十六</div>
+      <div class="hd3">練習 4h05　·　13 / 13</div>
+      <svg id="b" viewBox="0 0 356 712" style="margin-top:12px"></svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>兩天的左側細軸完全不一樣，但右側主軸的形狀幾乎一樣。</b><br>
+  因為折疊把「什麼時候」壓掉了，留下的是「練了多少、比例如何」。<em>◆</em> 是錨點（固定時刻），
+  它在細軸上永遠釘在同一個高度——那是一天唯一不動的骨架，浮動的練習繞著它重新分佈。
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function E(t,a,x){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);
+  if(x!=null)e.textContent=x;return e}
+const M=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const DUR=m=>m>=60?(Math.floor(m/60)+'h'+(m%60?String(m%60).padStart(2,'0'):'')):(m+'分');
+const COL=f=>`rgba(255,90,60,${(.24+f*.76).toFixed(2)})`;
+const GOLD='#f5c451';
+
+function draw(id,rec){
+ const S=document.getElementById(id),RAIL=15,X=62,W=356-X-6;
+ const K=1.02,GAPMIN=18,T0=5*60,T1=22*60,RH=690;
+
+ S.appendChild(E('line',{x1:RAIL,y1:8,x2:RAIL,y2:8+RH,stroke:'#1a1e26','stroke-width':2}));
+ [6,9,12,15,18,21].forEach(h=>S.appendChild(E('text',
+   {x:RAIL-5,y:8+(h*60-T0)/(T1-T0)*RH+3,fill:'#363d48','font-size':9,'text-anchor':'end'},h)));
+ /* 錨點：細軸上永遠固定的兩條刻度 */
+ [['10:00'],['19:00']].forEach(([t])=>{
+   const y=8+(M(t)-T0)/(T1-T0)*RH;
+   S.appendChild(E('line',{x1:RAIL-7,y1:y,x2:RAIL+7,y2:y,stroke:GOLD,'stroke-width':1,opacity:.5}));
+ });
+
+ let y=10,prev=null;
+ rec.forEach(o=>{
+   const A=M(o.a),B=M(o.b),d=B-A;
+   if(prev!=null){
+     const g=A-prev;
+     if(g>=GAPMIN){
+       const h=27+Math.min(22,Math.sqrt(g)*1.45);
+       S.appendChild(E('path',{d:`M${X+6} ${y+h/2-4}l8 -5 l8 10 l8 -10 l8 10 l8 -5`,
+         fill:'none',stroke:'#2a303a','stroke-width':1.3}));
+       S.appendChild(E('text',{x:X+62,y:y+h/2+4,fill:'#4a515c','font-size':10.5},`空 ${DUR(g)}`));
+       y+=h;
+     } else if(g>0) y+=g*K;
+   }
+   const h=Math.max(d*K,17);
+   S.appendChild(E('rect',{x:X,y,width:W,height:h,rx:5,
+     fill:o.soft?'rgba(154,164,178,.14)':COL(o.f)}));
+   if(o.anchor){
+     S.appendChild(E('rect',{x:X,y,width:3,height:h,rx:1.5,fill:GOLD}));
+     S.appendChild(E('circle',{cx:X+W-12,cy:y+11,r:2.6,fill:GOLD}));
+   }
+   S.appendChild(E('text',{x:X+12,y:y+15,fill:o.soft?'#9aa4b2':'#fff','font-size':12.5,
+     'font-weight':500},o.n));
+   if(h>34)S.appendChild(E('text',{x:X+12,y:y+31,fill:'rgba(255,255,255,.6)','font-size':10.5},
+     `${o.a} → ${o.b}　${DUR(d)}${o.anchor?'　固定':''}`));
+   else S.appendChild(E('text',{x:X+W-(o.anchor?24:11),y:y+15,fill:'rgba(255,255,255,.5)',
+     'font-size':10.5,'text-anchor':'end'},DUR(d)));
+
+   const ry=8+(A-T0)/(T1-T0)*RH;
+   S.appendChild(E('rect',{x:RAIL-3,y:ry,width:6,height:Math.max(d/(T1-T0)*RH,1.6),rx:1.5,
+     fill:o.anchor?GOLD:(o.soft?'#59616f':'#ff5a3c')}));
+   prev=B; y+=h+3;
+ });
+}
+
+/* 早練日 */
+draw('a',[
+ {n:'Awake · 躺床',a:'6:12',b:'6:38',f:.3,soft:1},
+ {n:'Guru Pooja',   a:'6:45',b:'7:02',f:.62},
+ {n:'Maha Chanting',a:'7:02',b:'7:20',f:.45},
+ {n:'Surya Kriya',  a:'7:20',b:'8:05',f:.95},
+ {n:'Yogasana',     a:'8:05',b:'8:40',f:.55},
+ {n:'Shakti Chalana',a:'8:45',b:'9:15',f:.70},
+ {n:'Shambhavi',    a:'9:15',b:'9:36',f:.80},
+ {n:'Brunch',       a:'10:00',b:'10:40',f:.4,soft:1,anchor:1},
+ {n:'Shoonya',      a:'12:00',b:'12:20',f:.65},
+ {n:'Shoonya',      a:'17:30',b:'17:50',f:.5},
+ {n:'Presence Time',a:'18:10',b:'19:00',f:.6,soft:1},
+ {n:'Dinner',       a:'19:00',b:'19:40',f:.35,soft:1,anchor:1},
+]);
+
+/* 晚練日：同樣的練習，時刻整團往後，被 10:00 的 Brunch 切成兩半 */
+draw('b',[
+ {n:'Awake · 躺床',a:'7:40',b:'8:20',f:.2,soft:1},
+ {n:'Guru Pooja',   a:'8:30',b:'8:47',f:.5},
+ {n:'Maha Chanting',a:'8:47',b:'9:05',f:.4},
+ {n:'Surya Kriya',  a:'9:10',b:'9:55',f:.85},
+ {n:'Brunch',       a:'10:00',b:'10:45',f:.4,soft:1,anchor:1},
+ {n:'Shoonya',      a:'11:20',b:'11:40',f:.6},
+ {n:'Yogasana',     a:'14:20',b:'14:55',f:.6},
+ {n:'Shakti Chalana',a:'15:00',b:'15:30',f:.75},
+ {n:'Shambhavi',    a:'15:30',b:'15:52',f:.8},
+ {n:'Shoonya',      a:'17:40',b:'18:00',f:.45},
+ {n:'Presence Time',a:'18:15',b:'19:00',f:.55,soft:1},
+ {n:'Dinner',       a:'19:00',b:'19:40',f:.35,soft:1,anchor:1},
+]);
+</script>
+</body>
+</html>

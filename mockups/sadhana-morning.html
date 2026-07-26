@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>早晨流程六格</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,2vw,26px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:22px}
+.cell{width:min(300px,100%)}
+.st{font-size:11px;color:#f5b93c;letter-spacing:2px;margin-bottom:3px}
+.tt{font-size:13px;color:#e8ecf3;font-weight:600;margin-bottom:3px}
+.ds{font-size:11px;color:#565d68;line-height:1.65;margin-bottom:9px;min-height:36px}
+.p{width:100%;height:552px;border-radius:30px;background:#1c1c1e;border:1px solid #2a2a2d;
+  position:relative;overflow:hidden;padding:0 22px}
+.nc{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:82px;height:22px;
+  border-radius:12px;background:#0a0a0b}
+
+.ttl{color:#c7c7cc;font-size:16px;padding-top:58px}
+.jt{font-size:22px;font-weight:800;color:#e8ecf3;padding-top:54px}
+.jd{font-size:11px;color:#8e8e93;margin-top:7px}
+.jd2{font-size:21px;font-weight:800;color:#e8ecf3;margin:0 0 13px}
+.cds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cd{border-radius:13px;padding:12px 11px;min-height:72px}
+.cd.big{grid-row:span 2;background:#2a2a2d;min-height:156px;display:flex;flex-direction:column}
+.cd.r{background:#4d2529}.cd.b{background:#29314d}
+.ct{font-size:15px;font-weight:700;color:#e8ecf3}
+.cs{font-size:10.5px;color:#9a9aa0;margin-top:4px;line-height:1.5}
+.cta{margin-top:auto;background:#f5b93c;color:#241d0c;border-radius:10px;height:34px;
+  font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cta.ghost{background:none;border:1px solid #6e6e73;color:#c7c7cc;font-weight:500}
+.cmini{margin-top:auto;font-size:11px;color:#8e8e93;line-height:1.7}
+.cmini b{color:#f5b93c;font-weight:600}
+
+/* 柱子 */
+.rail{position:relative;margin-top:18px;height:250px}
+.ln{position:absolute;left:52px;width:1.5px;background:#4a4a4d}
+.pl{position:absolute;left:46px;width:11px;border-radius:6px;background:#6e6e73}
+.fd{position:absolute;left:43px;width:17px;height:26px;border-radius:9px;background:#3a3a3e;border:1px solid #4a4a4d}
+.fd i{position:absolute;left:3px;right:3px;height:1px;background:#5c5c61}
+.tl{position:absolute;left:0;width:36px;text-align:right;color:#8e8e93;font-size:11.5px}
+.nl{position:absolute;left:74px;color:#8e8e93;font-size:12.5px;white-space:nowrap}
+.gp{position:absolute;left:74px;color:#3a3a3d;font-size:10px}
+.bb{position:absolute;left:43px;width:17px;height:17px;border-radius:50%;background:#f5b93c;
+  box-shadow:0 0 16px rgba(245,185,60,.3)}
+.bb.id{background:none;border:1.4px solid #6e6e73;box-shadow:none}
+.sm{position:absolute;left:47px;width:8px;border-radius:4px 4px 0 0;background:#f5b93c}
+.nl.on{color:#f5b93c;font-size:15px}
+.nl.id{color:#c7c7cc;font-size:15px}
+/* 錨線 */
+.anc{position:absolute;left:20px;right:-8px;border-top:1px dashed rgba(245,185,60,.42)}
+.anct{position:absolute;right:-8px;color:#a98432;font-size:10.5px;transform:translateY(-15px);text-align:right}
+.anc.hot{border-top-color:rgba(245,185,60,.9)}
+.anc.hot+.anct{color:#f5b93c}
+
+.tmw{text-align:center;margin-top:2px}
+.tml{color:#8e8e93;font-size:12px}
+.tmv{color:#d4d4d8;font-size:42px;font-weight:300;font-variant-numeric:tabular-nums}
+.fin{text-align:center;margin-top:28px;color:#e8503a;font-size:15px}
+.sbig{text-align:center;margin-top:12px}
+.sbig .b{display:inline-block;width:104px;height:104px;border-radius:50%;border:1.3px solid #f5b93c;
+  color:#f5b93c;font-size:16px;line-height:104px}
+.hint{text-align:center;color:#48484c;font-size:10.5px;margin-top:12px}
+
+/* 一頁一題 */
+.q{padding-top:70px}
+.qo{font-size:10px;color:#5c5c61;letter-spacing:2px}
+.qn{font-size:11px;color:#f5b93c;letter-spacing:2px;margin-top:26px}
+.ql{font-size:25px;color:#e8ecf3;font-weight:600;margin-top:5px}
+.qt{font-size:12.5px;color:#8e8e93;line-height:1.9;margin-top:14px}
+.dots{display:flex;gap:13px;justify-content:center;margin-top:52px}
+.dots i{width:33px;height:33px;border-radius:50%;border:1.3px solid #4a4a4d;display:block}
+.yn{display:flex;gap:11px;margin-top:52px}
+.yn i{flex:1;height:48px;border-radius:13px;border:1.3px solid #4a4a4d;color:#8e8e93;font-size:14px;
+  display:flex;align-items:center;justify-content:center;font-style:normal}
+.qh{text-align:center;color:#48484c;font-size:10.5px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="grid">
+
+<!-- ① -->
+<div class="cell">
+  <div class="st">06:12</div><div class="tt">醒了，還躺著</div>
+  <div class="ds">拿起手機、按一下就放下。不進任何頁面、不問任何問題。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="jt">Journal</div><div class="jd">7月25日</div><div class="jd2">星期六</div>
+    <div class="cds">
+      <div class="cd big"><div class="ct">Sadhana</div>
+        <div class="cs">今天還沒開始</div>
+        <div class="cta">醒了</div></div>
+      <div class="cd r"><div class="ct">Physics</div></div>
+      <div class="cd b"><div class="ct">Journal</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ② -->
+<div class="cell">
+  <div class="st">06:38</div><div class="tt">起身，再按一次</div>
+  <div class="ds">躺床 26 分是兩個時間戳相減出來的，不是你填的。這時才問精神。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="q">
+      <div class="qo">1 / 1</div>
+      <div class="qn">AWAKE　·　躺床 26 分</div>
+      <div class="ql">精神</div>
+      <div class="qt">剛睜眼那一秒，身體是輕的還是重的？</div>
+      <div class="dots"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="qh">長按確認</div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ -->
+<div class="cell">
+  <div class="st">06:45</div><div class="tt">要開始早課了</div>
+  <div class="ds">首頁卡已經換成下一項。10:00 的 Brunch 錨線一早就畫在柱子下面等著。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="ttl">Start Practice</div>
+    <div class="rail">
+      <div class="ln" style="top:6px;height:36px"></div>
+      <div class="pl" style="top:6px;height:22px"></div>
+      <div class="tl" style="top:11px">6:12</div>
+      <div class="nl" style="top:11px">Awake</div>
+      <div class="bb id" style="top:44px"></div>
+      <div class="tl" style="top:45px">—</div>
+      <div class="nl id" style="top:42px">Guru Pooja</div>
+      <div class="anc" style="top:214px"></div>
+      <div class="anct" style="top:214px">10:00　Brunch　還有 3h15</div>
+    </div>
+    <div class="sbig"><span class="b">Start</span></div>
+    <div class="hint">點名字換一項　·　點時間可改</div>
+  </div>
+</div>
+
+<!-- ④ -->
+<div class="cell">
+  <div class="st">06:45 → 07:02</div><div class="tt">計時中</div>
+  <div class="ds">球實心、水銀往下長。你放下手機去做事，回來按 Finished。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="ttl">Start Practice</div>
+    <div class="rail">
+      <div class="ln" style="top:6px;height:36px"></div>
+      <div class="pl" style="top:6px;height:22px"></div>
+      <div class="tl" style="top:11px">6:12</div>
+      <div class="nl" style="top:11px">Awake</div>
+      <div class="sm" style="top:42px;height:34px"></div>
+      <div class="bb" style="top:70px"></div>
+      <div class="tl" style="top:71px">6:45</div>
+      <div class="nl on" style="top:69px">Guru Pooja</div>
+      <div class="anc" style="top:214px"></div>
+      <div class="anct" style="top:214px">10:00　Brunch　還有 2h58</div>
+    </div>
+    <div class="tmw"><div class="tml">timer</div><div class="tmv">17:04</div></div>
+    <div class="fin">Finished</div>
+  </div>
+</div>
+
+<!-- ⑤ -->
+<div class="cell">
+  <div class="st">07:02</div><div class="tt">Finished 之後的兩題</div>
+  <div class="ds">Guru Pooja 只有 focus 和 samyama 兩題。一頁一題，沒有預設值。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="q">
+      <div class="qo">2 / 2</div>
+      <div class="qn">GURU POOJA　·　17 分</div>
+      <div class="ql">Samyama</div>
+      <div class="qt">這 17 分鐘裡，有沒有保持住？</div>
+      <div class="yn"><i>有</i><i>沒有</i></div>
+      <div class="qh">答完回到待啟動　·　下一項 Maha Chanting</div>
+    </div>
+  </div>
+</div>
+
+<!-- ⑥ -->
+<div class="cell">
+  <div class="st">09:58</div><div class="tt">撞到錨線</div>
+  <div class="ds">柱子長到接近 10:00，錨線亮起來。Brunch 不用計時——吃完點那條線補上就好。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="ttl">Start Practice</div>
+    <div class="rail">
+      <div class="fd" style="top:6px"><i style="top:7px"></i><i style="top:13px"></i><i style="top:19px"></i></div>
+      <div class="tl" style="top:12px">6:12</div>
+      <div class="nl" style="top:12px" >5 項　·　3h04　⌄</div>
+      <div class="ln" style="top:6px;height:96px"></div>
+      <div class="pl" style="top:38px;height:26px"></div>
+      <div class="tl" style="top:45px">8:45</div>
+      <div class="nl" style="top:45px">Shakti Chalana</div>
+      <div class="sm" style="top:68px;height:30px"></div>
+      <div class="bb" style="top:92px"></div>
+      <div class="tl" style="top:93px">9:37</div>
+      <div class="nl on" style="top:91px">Shambhavi</div>
+      <div class="anc hot" style="top:146px"></div>
+      <div class="anct" style="top:146px">10:00　Brunch　還有 2 分　▸</div>
+    </div>
+    <div class="tmw"><div class="tml">timer</div><div class="tmv">21:12</div></div>
+    <div class="fin">Finished</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

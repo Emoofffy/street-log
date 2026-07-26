@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>選單式 Sadhana</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,2vw,26px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:"Avenir Next","Avenir",-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:26px}
+.cell{width:min(340px,100%)}
+.st{font-size:11px;color:#f5b93c;letter-spacing:2px;margin-bottom:3px}
+.tt{font-size:13px;color:#e8ecf3;font-weight:600;margin-bottom:3px}
+.ds{font-size:11px;color:#565d68;line-height:1.65;margin-bottom:10px;min-height:34px}
+.p{width:100%;height:880px;border-radius:34px;background:#232325;border:1px solid #2e2e31;
+  position:relative;overflow:hidden;text-align:center}
+.nc{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:96px;height:26px;
+  border-radius:14px;background:#0d0d0e}
+
+/* ── 頂部：已量到的部分 ── */
+.top{padding-top:78px}
+.t-sm{font-size:14px;color:#9a9a9f;font-weight:400}
+.t-lg{font-size:26px;color:#e6e6ea;font-weight:400;letter-spacing:.3px;margin-top:2px}
+.seg{position:relative;margin:14px auto 0;width:2px;background:#5a5a5f}
+.seg .d0{position:absolute;top:-4px;left:-3px;width:8px;height:8px;border-radius:50%;background:#c9c9ce}
+.seg .d1{position:absolute;bottom:-4px;left:-3px;width:8px;height:8px;border-radius:50%;background:#f5b93c}
+.t-gd{font-size:16px;color:#f5b93c;margin-top:9px}
+
+/* ── 已完成的項目，掛在同一條中線上 ── */
+.done{position:relative;margin-top:0}
+.drow{position:relative;height:30px}
+.drow .ln{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#3f3f44;transform:translateX(-1px)}
+.drow .dt{position:absolute;left:50%;top:11px;width:8px;height:8px;border-radius:50%;
+  background:#6e6e73;transform:translateX(-4px)}
+.drow .nm{position:absolute;left:calc(50% + 20px);top:6px;font-size:14px;color:#76767c}
+.drow .tm{position:absolute;right:calc(50% + 20px);top:7px;font-size:12.5px;color:#5c5c61}
+.fold{position:relative;height:38px}
+.fold .ln{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#3f3f44;transform:translateX(-1px)}
+.fold .cap{position:absolute;left:50%;top:9px;width:18px;height:22px;border-radius:9px;
+  background:#3a3a3e;border:1px solid #4d4d52;transform:translateX(-9px)}
+.fold .cap i{position:absolute;left:3px;right:3px;height:1px;background:#5c5c61}
+.fold .nm{position:absolute;left:calc(50% + 22px);top:12px;font-size:12.5px;color:#6e6e73}
+.fold .tm{position:absolute;right:calc(50% + 22px);top:12px;font-size:12px;color:#5c5c61}
+
+/* ── 進行中 ── */
+.act{position:relative;height:96px}
+.act .ln{position:absolute;left:50%;top:0;width:2px;background:#3f3f44;transform:translateX(-1px)}
+.act .hg{position:absolute;left:50%;width:6px;border-radius:3px;background:#f5b93c;transform:translateX(-3px)}
+.act .bb{position:absolute;left:50%;width:15px;height:15px;border-radius:50%;background:#f5b93c;
+  transform:translateX(-7.5px);box-shadow:0 0 18px rgba(245,185,60,.35)}
+.act .nm{position:absolute;left:calc(50% + 22px);font-size:19px;color:#f5b93c}
+.act .tm{position:absolute;right:calc(50% + 22px);font-size:13px;color:#c9c9ce}
+.tmv{font-size:46px;color:#d4d4d8;font-weight:200;font-variant-numeric:tabular-nums;margin-top:26px}
+.tml{font-size:13px;color:#8e8e93}
+.fin{color:#e8503a;font-size:17px;margin-top:34px}
+
+/* ── 選單 ── */
+.menu{margin-top:26px}
+.grp{margin-top:30px}
+.grp:first-child{margin-top:0}
+.gl{font-size:11.5px;color:#6e6e73;font-weight:400;letter-spacing:.2px;margin-bottom:9px}
+.it{font-size:17.5px;color:#e6e6ea;font-weight:400;line-height:1.95;letter-spacing:.2px}
+.it.dim{color:#8e8e93}
+.it.doneit{color:#57575c;text-decoration:line-through;text-decoration-color:#3a3a3d}
+.it.opt{color:#8e8e93}
+.anchor{font-size:12px;color:#a98432;letter-spacing:.4px;margin:26px 0 0}
+.anchor b{color:#f5b93c;font-weight:400}
+</style>
+</head>
+<body>
+<div class="grid">
+
+<!-- ① 你畫的 -->
+<div class="cell">
+  <div class="st">05:47</div><div class="tt">你的稿</div>
+  <div class="ds">只有 Awake 有時間，因為只有它量到了。其餘只有名字。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="top">
+      <div class="t-sm">4:30</div>
+      <div class="t-lg">Awake</div>
+      <div class="seg" style="height:44px"><span class="d0"></span><span class="d1"></span></div>
+      <div class="t-gd">5:47</div>
+    </div>
+    <div class="menu">
+      <div class="grp" style="margin-top:64px">
+        <div class="gl">morning session</div>
+        <div class="it dim">Guru Pooja</div>
+        <div class="it dim">Maha Chant</div>
+      </div>
+      <div class="grp">
+        <div class="gl">Main sadhana</div>
+        <div class="it">Surya Kriya</div>
+        <div class="it">Yogasana</div>
+        <div class="it">Shakti Chalana</div>
+        <div class="it">Shambhavi</div>
+        <div class="it">Samyama</div>
+      </div>
+      <div class="grp">
+        <div class="gl">Break</div>
+        <div class="it">Shoonya</div>
+        <div class="it">Breathe Watch</div>
+      </div>
+      <div class="grp">
+        <div class="gl">Others</div>
+        <div class="it opt">Angamardana</div>
+        <div class="it opt">Surya Shakti</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 點下去之後 -->
+<div class="cell">
+  <div class="st">07:22</div><div class="tt">點了 Surya Kriya</div>
+  <div class="ds">中線往下長，做完的掛在線上。選單留在下面，隨時可以跳著點。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="top" style="padding-top:56px">
+      <div class="t-sm">4:30</div>
+      <div class="t-lg">Awake</div>
+      <div class="seg" style="height:30px"><span class="d0"></span><span class="d1" style="background:#6e6e73"></span></div>
+    </div>
+    <div class="done">
+      <div class="drow"><span class="ln"></span><span class="dt"></span>
+        <span class="tm">6:02</span><span class="nm">Guru Pooja</span></div>
+      <div class="drow"><span class="ln"></span><span class="dt"></span>
+        <span class="tm">6:19</span><span class="nm">Maha Chant</span></div>
+      <div class="drow" style="height:44px"><span class="ln"></span></div>
+    </div>
+    <div class="act" style="height:74px">
+      <span class="ln" style="height:14px"></span>
+      <span class="hg" style="top:14px;height:30px"></span>
+      <span class="bb" style="top:40px"></span>
+      <span class="tm" style="top:41px">7:22</span>
+      <span class="nm" style="top:36px">Surya Kriya</span>
+    </div>
+    <div class="tml">timer</div>
+    <div class="tmv">26:41</div>
+    <div class="fin">Finished</div>
+    <div class="anchor">下一個固定點　<b>Brunch 10:00</b>　還有 2h11</div>
+  </div>
+</div>
+
+<!-- ③ 中午 -->
+<div class="cell">
+  <div class="st">11:40</div><div class="tt">中午：柱子摺疊，選單變短</div>
+  <div class="ds">做過的從選單消失（劃掉留痕）。整天結束時選單會空掉，只剩一條長線。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="top" style="padding-top:52px">
+      <div class="t-sm">4:30</div>
+      <div class="t-lg">Awake</div>
+      <div class="seg" style="height:24px"><span class="d0"></span><span class="d1" style="background:#6e6e73"></span></div>
+    </div>
+    <div class="done">
+      <div class="fold"><span class="ln"></span>
+        <span class="cap"><i style="top:6px"></i><i style="top:11px"></i><i style="top:16px"></i></span>
+        <span class="tm">6:02</span><span class="nm">6 項　·　3h14　⌄</span></div>
+      <div class="drow"><span class="ln"></span><span class="dt" style="background:#f5b93c"></span>
+        <span class="tm">10:00</span><span class="nm" style="color:#a98432">Brunch　固定</span></div>
+      <div class="drow"><span class="ln"></span><span class="dt"></span>
+        <span class="tm">10:52</span><span class="nm">Shoonya</span></div>
+      <div class="drow" style="height:30px"><span class="ln"></span></div>
+    </div>
+    <div class="menu" style="margin-top:6px">
+      <div class="grp">
+        <div class="gl">Main sadhana</div>
+        <div class="it doneit">Surya Kriya</div>
+        <div class="it doneit">Yogasana</div>
+        <div class="it">Shakti Chalana</div>
+        <div class="it">Shambhavi</div>
+        <div class="it">Samyama</div>
+      </div>
+      <div class="grp">
+        <div class="gl">Break</div>
+        <div class="it">Breathe Watch</div>
+      </div>
+      <div class="grp">
+        <div class="gl">Others</div>
+        <div class="it opt">Angamardana</div>
+        <div class="it opt">Surya Shakti</div>
+      </div>
+    </div>
+    <div class="anchor">下一個固定點　<b>Dinner 19:00</b></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

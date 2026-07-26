@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>時間軸比例三解</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,3vw,32px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;align-items:flex-start}
+.col{width:min(392px,100%)}
+.cap{font-size:12.5px;color:#7a828e;letter-spacing:.5px;margin-bottom:4px}
+.cap b{color:#e8ecf3;font-weight:600}
+.cap2{font-size:11.5px;color:#565d68;margin-bottom:11px;line-height:1.6}
+.phone{width:100%;height:812px;border-radius:32px;border:1px solid #222732;background:#0b0d11;
+  overflow:hidden;position:relative;padding:22px 20px}
+.hd{font-size:11px;color:#5d6470;letter-spacing:3px}
+.hd2{font-size:23px;color:#e8ecf3;font-weight:600;letter-spacing:-.2px;margin-top:5px}
+.hd3{font-size:12px;color:#6b7480;margin-top:3px}
+svg{display:block}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cap"><b>1 — 折軸</b>　段落內線性，空白折斷</div>
+    <div class="cap2">左邊那條細線是完整 24 小時，永遠在。右邊是被拉開的部分，兩者用括號對上。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十五</div>
+      <div class="hd3">練習 5h21　·　空白已折疊</div>
+      <svg id="a" viewBox="0 0 352 690" style="margin-top:14px"></svg>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>2 — 段落卡</b>　每段自成一個尺度</div>
+    <div class="cap2">上面一條 24 小時的細帶只管「在哪裡」，下面每張卡只管「裡面怎麼分配」。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十五</div>
+      <svg id="b" viewBox="0 0 352 716" style="margin-top:14px"></svg>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>3 — 雙環</b>　外環是一天，內環只有練習</div>
+    <div class="cap2">外圈細環標位置，內圈粗環把練習時間攤開填滿整圈，細線對應兩者。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十五</div>
+      <svg id="c" viewBox="0 0 352 700" style="margin-top:6px"></svg>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function E(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);
+  if(txt!=null)e.textContent=txt;return e}
+const M=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const HM=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const DUR=m=>m>=60?(Math.floor(m/60)+'h'+(m%60?String(m%60).padStart(2,'0'):'')):(m+'分');
+
+/* 今天的實際資料 —— 練習集中在四段，其餘是空白 */
+const ITEMS=[
+ {a:'6:12',b:'6:38',n:'Awake · 躺床', f:.30,s:0,soft:1},
+ {a:'6:45',b:'7:02',n:'Guru Pooja',    f:.62,s:1},
+ {a:'7:02',b:'7:20',n:'Maha Chanting', f:.45,s:0},
+ {a:'7:20',b:'8:05',n:'Surya Kriya',   f:.95,s:1,sub:'3 輪'},
+ {a:'8:05',b:'8:40',n:'Yogasana',      f:.55,s:0},
+ {a:'8:45',b:'9:15',n:'Shakti Chalana',f:.70,s:1,sub:'2 輪'},
+ {a:'9:15',b:'9:36',n:'Shambhavi',     f:.80,s:1},
+ {a:'10:20',b:'11:00',n:'Brunch',      f:.40,s:1},
+ {a:'12:40',b:'13:00',n:'Shoonya',     f:.65,s:0},
+ {a:'17:30',b:'17:50',n:'Shoonya',     f:.50,s:0},
+ {a:'19:00',b:'20:00',n:'Presence Time',f:.6,s:0,soft:1},
+ {a:'20:00',b:'20:40',n:'Dinner',      f:.35,s:0,soft:1},
+].map(o=>({...o,A:M(o.a),B:M(o.b),d:M(o.b)-M(o.a)}));
+
+const COL=f=>`rgba(255,90,60,${(.22+f*.78).toFixed(2)})`;
+const GOLD='#f5c451';
+
+/* ═══ 1 · 折軸 ═══ */
+(function(){
+ const S=document.getElementById('a'),RAIL=16,X=64,W=352-X-6;
+ const K=1.05, GAPMIN=18;                    /* 1 分鐘 = 1.05px；超過 18 分的空白折斷 */
+ const T0=5*60,T1=22*60, RH=660;             /* 左側 24h 參照軸：5:00–22:00 */
+ S.appendChild(E('line',{x1:RAIL,y1:10,x2:RAIL,y2:10+RH,stroke:'#1e232c','stroke-width':2}));
+ [6,9,12,15,18,21].forEach(h=>{
+   const y=10+(h*60-T0)/(T1-T0)*RH;
+   S.appendChild(E('text',{x:RAIL-6,y:y+3,fill:'#3f4652','font-size':9,'text-anchor':'end'},h));
+ });
+
+ let y=12, prevEnd=null;
+ ITEMS.forEach((o,i)=>{
+   if(prevEnd!=null){
+     const g=o.A-prevEnd;
+     if(g>=GAPMIN){
+       const h=30+Math.min(26,Math.sqrt(g)*1.6);
+       S.appendChild(E('path',{d:`M${X+6} ${y+h/2-5}l9 -5 l9 10 l9 -10 l9 10 l9 -5`,
+         fill:'none',stroke:'#2c323d','stroke-width':1.4}));
+       S.appendChild(E('text',{x:X+66,y:y+h/2+4,fill:'#4d5460','font-size':11},`空 ${DUR(g)}`));
+       y+=h;
+     } else if(g>0){ y+=g*K }
+   }
+   const h=Math.max(o.d*K,16);
+   S.appendChild(E('rect',{x:X,y,width:W,height:h,rx:5,
+     fill:o.soft?'rgba(154,164,178,.13)':COL(o.f)}));
+   S.appendChild(E('text',{x:X+11,y:y+15,fill:o.soft?'#9aa4b2':'#fff','font-size':12.5,
+     'font-weight':500},o.n));
+   if(h>34)S.appendChild(E('text',{x:X+11,y:y+31,fill:'rgba(255,255,255,.62)','font-size':10.5},
+     `${o.a} → ${o.b}　${DUR(o.d)}${o.sub?'　'+o.sub:''}`));
+   else S.appendChild(E('text',{x:X+W-10,y:y+15,fill:'rgba(255,255,255,.5)','font-size':10.5,
+     'text-anchor':'end'},DUR(o.d)));
+   if(o.s)S.appendChild(E('circle',{cx:X+W-11,cy:y+h-10,r:2.6,fill:GOLD}));
+
+   /* 左側參照軸上的對應位置 + 連到展開區的細線 */
+   const ry=10+(o.A-T0)/(T1-T0)*RH, rh=Math.max(o.d/(T1-T0)*RH,1.5);
+   S.appendChild(E('rect',{x:RAIL-3,y:ry,width:6,height:rh,rx:1.5,fill:o.soft?'#59616f':'#ff5a3c'}));
+   if(i===0||ITEMS[i-1].B<o.A-40)
+     S.appendChild(E('path',{d:`M${RAIL+6} ${ry+rh/2}C${RAIL+26} ${ry+rh/2} ${X-24} ${y+8} ${X-3} ${y+8}`,
+       fill:'none',stroke:'#262c36','stroke-width':1}));
+   prevEnd=o.B; y+=h+3;
+ });
+})();
+
+/* ═══ 2 · 段落卡 ═══ */
+(function(){
+ const S=document.getElementById('b'),W=352;
+ /* 上方 24h 細帶 */
+ S.appendChild(E('rect',{x:8,y:8,width:W-16,height:9,rx:4.5,fill:'#14181f'}));
+ const t0=5*60,t1=22*60;
+ ITEMS.forEach(o=>{
+   const x=8+(o.A-t0)/(t1-t0)*(W-16), w=Math.max(o.d/(t1-t0)*(W-16),1.5);
+   S.appendChild(E('rect',{x,y:8,width:w,height:9,rx:1.5,fill:o.soft?'#59616f':'#ff5a3c'}));
+ });
+ [6,9,12,15,18,21].forEach(h=>{
+   const x=8+(h*60-t0)/(t1-t0)*(W-16);
+   S.appendChild(E('text',{x,y:32,fill:'#3f4652','font-size':9,'text-anchor':'middle'},h+':00'));
+ });
+
+ /* 分段 */
+ const CL=[];let cur=null;
+ ITEMS.forEach(o=>{ if(cur&&o.A-cur.end<=25){cur.items.push(o);cur.end=o.B}
+   else{cur={items:[o],start:o.A,end:o.B};CL.push(cur)} });
+ const NAME=['晨','午','日間','日間','晚'];
+
+ let y=48;
+ CL.forEach((c,ci)=>{
+   const span=c.end-c.start, prac=c.items.reduce((s,o)=>s+o.d,0);
+   const H=c.items.length>1?128:96;
+   S.appendChild(E('rect',{x:8,y,width:W-16,height:H,rx:13,fill:'#12151b',stroke:'#1e232c'}));
+   S.appendChild(E('text',{x:24,y:y+25,fill:'#e8ecf3','font-size':14,'font-weight':600},
+     `${NAME[ci]||'段'}　${HM(c.start)} → ${HM(c.end)}`));
+   S.appendChild(E('text',{x:W-24,y:y+25,fill:'#6b7480','font-size':11.5,'text-anchor':'end'},
+     `${DUR(span)}　練 ${DUR(prac)}`));
+
+   /* 卡內：這一段自己的比例尺，1 分鐘 = (W-48)/span */
+   const bx=24,bw=W-48,by=y+38,bh=26,k=bw/span;
+   S.appendChild(E('rect',{x:bx,y:by,width:bw,height:bh,rx:6,fill:'#0d1015'}));
+   c.items.forEach(o=>{
+     S.appendChild(E('rect',{x:bx+(o.A-c.start)*k,y:by,width:Math.max(o.d*k,3),height:bh,rx:4,
+       fill:o.soft?'rgba(154,164,178,.2)':COL(o.f)}));
+     if(o.s)S.appendChild(E('circle',{cx:bx+(o.A-c.start+o.d/2)*k,cy:by+bh+8,r:2.4,fill:GOLD}));
+   });
+   /* 卡內刻度：每 30 分 */
+   for(let t=Math.ceil(c.start/30)*30;t<c.end;t+=30){
+     const x=bx+(t-c.start)*k;
+     S.appendChild(E('line',{x1:x,y1:by+bh+13,x2:x,y2:by+bh+17,stroke:'#2c323d','stroke-width':1}));
+     S.appendChild(E('text',{x,y:by+bh+28,fill:'#4d5460','font-size':9,'text-anchor':'middle'},HM(t)));
+   }
+   /* 項目名 */
+   let ty=by+bh+46;
+   c.items.forEach(o=>{
+     S.appendChild(E('circle',{cx:bx+4,cy:ty-4,r:3.4,fill:o.soft?'#59616f':COL(o.f)}));
+     S.appendChild(E('text',{x:bx+15,y:ty,fill:'#9aa4b2','font-size':11},o.n));
+     S.appendChild(E('text',{x:bx+bw,y:ty,fill:'#5d6470','font-size':10.5,'text-anchor':'end'},DUR(o.d)));
+     ty+=17;
+   });
+   y+=Math.max(H,(by+bh+46+c.items.length*17)-y+12)+11;
+ });
+})();
+
+/* ═══ 3 · 雙環 ═══ */
+(function(){
+ const S=document.getElementById('c'),cx=176,cy=250,RO=150,RI=104;
+ function pol(r,d){const a=(d-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]}
+ function arc(r,d0,d1){const[x0,y0]=pol(r,d0),[x1,y1]=pol(r,d1);
+   return`M${x0} ${y0}A${r} ${r} 0 ${d1-d0>180?1:0} 1 ${x1} ${y1}`}
+ const OD=t=>t/1440*360;
+
+ /* 外環：完整 24 小時 */
+ S.appendChild(E('circle',{cx,cy,r:RO,fill:'none',stroke:'#181c23','stroke-width':3}));
+ for(let h=0;h<24;h+=3){const[x,y]=pol(RO+17,h*15);
+   S.appendChild(E('text',{x,y:y+3,fill:'#3f4652','font-size':9.5,'text-anchor':'middle'},h))}
+ ITEMS.forEach(o=>S.appendChild(E('path',{d:arc(RO,OD(o.A),OD(o.B)),fill:'none',
+   stroke:o.soft?'#59616f':'#ff5a3c','stroke-width':3.5,'stroke-linecap':'butt'})));
+
+ /* 內環：只有練習時間，攤開填滿整圈 */
+ const tot=ITEMS.reduce((s,o)=>s+o.d,0);
+ let acc=0;
+ ITEMS.forEach(o=>{
+   const d0=acc/tot*360, d1=(acc+o.d)/tot*360;
+   S.appendChild(E('path',{d:arc(RI,d0+.6,d1-.6),fill:'none',
+     stroke:o.soft?'rgba(154,164,178,.28)':COL(o.f),'stroke-width':22,'stroke-linecap':'butt'}));
+   if(o.s){const[gx,gy]=pol(RI+16,(d0+d1)/2);S.appendChild(E('circle',{cx:gx,cy:gy,r:2.6,fill:GOLD}))}
+   /* 兩環對應的細線 */
+   [[OD(o.A),d0],[OD(o.B),d1]].forEach(([od,id])=>{
+     const[ax,ay]=pol(RO-4,od),[bx2,by2]=pol(RI+12,id);
+     S.appendChild(E('line',{x1:ax,y1:ay,x2:bx2,y2:by2,stroke:'#242a34','stroke-width':.8}));
+   });
+   /* 內環外側標名 */
+   if(o.d>=20){const[lx,ly]=pol(RI-20,(d0+d1)/2);
+     S.appendChild(E('text',{x:lx,y:ly+3,fill:'#7a828e','font-size':9,'text-anchor':'middle'},
+       o.n.replace(' · 躺床','').split(' ')[0]))}
+   acc+=o.d;
+ });
+ S.appendChild(E('text',{x:cx,y:cy-4,fill:'#e8ecf3','font-size':27,'text-anchor':'middle'},'5h21'));
+ S.appendChild(E('text',{x:cx,y:cy+18,fill:'#5d6470','font-size':10.5,'text-anchor':'middle',
+   'letter-spacing':1},'12 / 13'));
+
+ S.appendChild(E('text',{x:16,y:456,fill:'#6b7480','font-size':11},'外環　一天的位置（24h 等比）'));
+ S.appendChild(E('text',{x:16,y:476,fill:'#6b7480','font-size':11},'內環　只有練習，攤開填滿一圈'));
+ S.appendChild(E('text',{x:16,y:496,fill:'#6b7480','font-size':11},'細線　同一段練習在兩環的對應'));
+})();
+</script>
+</body>
+</html>

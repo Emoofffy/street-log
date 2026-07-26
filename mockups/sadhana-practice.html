@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Start Practice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:30px clamp(10px,3vw,32px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:34px;align-items:flex-start}
+.col{width:min(392px,100%)}
+.cap{font-size:12.5px;color:#7a828e;margin-bottom:4px}
+.cap b{color:#e8ecf3;font-weight:600}
+.cap2{font-size:11.5px;color:#565d68;margin-bottom:12px;line-height:1.6}
+
+.phone{width:100%;height:812px;border-radius:38px;background:#1c1c1e;position:relative;
+  overflow:hidden;border:1px solid #2a2a2d;padding:0 30px}
+.notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:112px;height:30px;
+  border-radius:16px;background:#0a0a0b}
+.title{color:#c7c7cc;font-size:21px;font-weight:400;padding-top:96px;letter-spacing:.2px}
+
+.rail{position:relative;margin-top:26px;height:392px}
+.line{position:absolute;left:66px;top:0;width:1.5px;background:#4a4a4d}
+.pill{position:absolute;left:60px;width:13px;border-radius:7px;background:#6e6e73}
+.tlab{position:absolute;left:0;width:46px;color:#8e8e93;font-size:14px;text-align:right}
+.nlab{position:absolute;left:92px;color:#8e8e93;font-size:15px;white-space:nowrap}
+.gaplab{position:absolute;left:92px;color:#3a3a3d;font-size:11.5px}
+
+.bulb{position:absolute;left:56px;width:21px;height:21px;border-radius:50%;background:#f5b93c;
+  box-shadow:0 0 22px rgba(245,185,60,.30)}
+.stem{position:absolute;left:62px;width:9px;border-radius:5px 5px 0 0;background:#f5b93c}
+.nlab.on{color:#f5b93c;font-size:19px;letter-spacing:.3px}
+.tlab.on{color:#c7c7cc}
+
+.tmwrap{text-align:center;margin-top:8px}
+.tmlab{color:#8e8e93;font-size:16px}
+.tmval{color:#d4d4d8;font-size:62px;font-weight:300;letter-spacing:1px;margin-top:2px;
+  font-variant-numeric:tabular-nums}
+.fin{text-align:center;margin-top:74px}
+.fin span{color:#e8503a;font-size:20px;cursor:pointer;padding:10px 24px;border-radius:12px;
+  display:inline-block}
+.fin span:active{background:rgba(232,80,58,.12)}
+.adj{text-align:center;color:#48484c;font-size:11.5px;margin-top:14px}
+
+.note{width:min(820px,100%);margin:26px auto 0;background:#0e1116;border:1px solid #1e232c;
+  border-radius:16px;padding:18px 22px;font-size:12.5px;color:#8d95a2;line-height:2.1}
+.note b{color:#e8ecf3}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cap"><b>Start Practice</b>　可以按的</div>
+    <div class="cap2">計時器真的在跑。按 Finished 會把金球封成灰丸，下一項自動接上、重新計時。</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="title">Start Practice</div>
+      <div class="rail" id="rail"></div>
+      <div class="tmwrap">
+        <div class="tmlab">timer</div>
+        <div class="tmval" id="tm">00:00</div>
+      </div>
+      <div class="fin"><span id="fin">Finished</span></div>
+      <div class="adj" id="adj">開始 7:05　·　點時間可改</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>兩條入口寫同一筆紀錄。</b>當下要練 → 進這個畫面讓計時器跑；事後才想起來 → 用可調時間那條路填。
+  紀錄本身沒有「是碼表還是手填」的差別，只有起訖時刻。<br>
+  <b>Finished 之後才問品質那幾題</b>——一頁一題、無預設值。計時器負責時間，那五題負責你自己。
+</div>
+
+<script>
+/* 今天：已完成 + 進行中 + 待接的鏈 */
+const DONE=[{n:'Guru Pooja',t:'5:30',d:10},{n:'Maha Chant',t:'5:40',d:18}];
+const QUEUE=['Surya Kriya','Yogasana','Shakti Chalana','Shambhavi'];
+let qi=0, startMin=7*60+5, elapsed=33*60+53, t0=Date.now();
+
+const M2=m=>Math.floor(m/60)+':'+String(m%60).padStart(2,'0');
+const rail=document.getElementById('rail');
+
+function layout(){
+  rail.innerHTML='';
+  const K=2.0, H=392;
+  let y=6, prev=null;
+  const put=(html)=>rail.insertAdjacentHTML('beforeend',html);
+
+  DONE.forEach(o=>{
+    const A=(+o.t.split(':')[0])*60+(+o.t.split(':')[1]);
+    if(prev!=null){
+      const g=A-prev;
+      if(g>=20){                                   /* 空白折疊 */
+        const h=54+Math.min(84,Math.sqrt(g)*8);
+        put(`<div class="gaplab" style="top:${y+h/2-8}px">空 ${M2(g)}</div>`);
+        y+=h;
+      } else y+=g*K;
+    }
+    const h=Math.max(o.d*K,18);
+    put(`<div class="pill" style="top:${y}px;height:${h}px"></div>`);
+    put(`<div class="tlab" style="top:${y+h/2-10}px">${o.t}</div>`);
+    put(`<div class="nlab" style="top:${y+h/2-10}px">${o.n}</div>`);
+    prev=A+o.d; y+=h+4;
+  });
+
+  /* 進行中：溫度計的球 */
+  const g=startMin-prev;
+  if(g>=20){const h=54+Math.min(84,Math.sqrt(g)*8);
+    put(`<div class="gaplab" style="top:${y+h/2-8}px">空 ${M2(g)}</div>`); y+=h}
+  else y+=Math.max(g,0)*K;
+
+  const stemH=Math.max(Math.round(elapsed/60*K),4);
+  put(`<div class="line" style="top:6px;height:${y+6}px"></div>`);
+  put(`<div class="stem" style="top:${y}px;height:${stemH+12}px"></div>`);
+  put(`<div class="bulb" style="top:${y+stemH+6}px"></div>`);
+  put(`<div class="tlab on" style="top:${y+stemH+6}px">${M2(startMin)}</div>`);
+  put(`<div class="nlab on" style="top:${y+stemH+4}px">${QUEUE[qi]}</div>`);
+  rail.style.height=Math.max(H,y+stemH+50)+'px';
+}
+
+function tick(){
+  const e=elapsed+Math.floor((Date.now()-t0)/1000);
+  document.getElementById('tm').textContent=
+    String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0');
+}
+document.getElementById('fin').onclick=()=>{
+  const mins=Math.max(1,Math.round((elapsed+(Date.now()-t0)/1000)/60));
+  DONE.push({n:QUEUE[qi],t:M2(startMin),d:mins});
+  startMin+=mins+2; qi=(qi+1)%QUEUE.length;
+  elapsed=0; t0=Date.now();
+  document.getElementById('adj').textContent=`開始 ${M2(startMin)}　·　點時間可改`;
+  layout(); tick();
+};
+layout(); tick(); setInterval(()=>{tick();},1000);
+setInterval(layout,15000);
+</script>
+</body>
+</html>

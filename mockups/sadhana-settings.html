@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Sadhana 設定</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,2vw,26px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:"Avenir Next","Avenir",-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:26px}
+.cell{width:min(344px,100%)}
+.st{font-size:11px;color:#f5b93c;letter-spacing:2px;margin-bottom:3px}
+.tt{font-size:13px;color:#e8ecf3;font-weight:600;margin-bottom:3px}
+.ds{font-size:11px;color:#565d68;line-height:1.65;margin-bottom:10px;min-height:34px}
+.p{width:100%;height:846px;border-radius:34px;background:#1c1c1e;border:1px solid #2e2e31;
+  position:relative;overflow:hidden;padding:0 20px}
+.nc{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:96px;height:26px;
+  border-radius:14px;background:#0d0d0e}
+
+.nav{padding-top:62px;display:flex;align-items:baseline;gap:11px}
+.bk{color:#8e8e93;font-size:19px}
+.h1{font-size:21px;color:#e6e6ea;font-weight:500}
+.sub{font-size:11.5px;color:#6e6e73;margin-top:5px;line-height:1.7}
+
+/* 群組 */
+.g{margin-top:22px}
+.gh{display:flex;align-items:center;gap:8px;padding:0 2px 7px}
+.gh .hd{color:#4d4d52;font-size:13px}
+.gh .nm{color:#8e8e93;font-size:12px;flex:1;letter-spacing:.3px}
+.gh .mo{color:#4d4d52;font-size:14px}
+.box{background:#232325;border-radius:13px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #2a2a2d}
+.row:last-child{border-bottom:0}
+.hd{color:#4d4d52;font-size:14px;letter-spacing:-1px}
+.nm{color:#e6e6ea;font-size:14.5px;flex:1}
+.nm.opt{color:#8e8e93}
+.gold{color:#f5b93c;font-size:11.5px}
+.tags{display:flex;gap:3px}
+.tg{width:17px;height:17px;border-radius:5px;background:#2e2e31;color:#6e6e73;font-size:9.5px;
+  display:flex;align-items:center;justify-content:center;letter-spacing:0}
+.tg.on{background:#3a3218;color:#f5b93c}
+.chev{color:#4d4d52;font-size:13px}
+.add{color:#f5b93c;font-size:13px;padding:11px 12px}
+.legend{margin-top:16px;color:#4d4d52;font-size:10.5px;line-height:2}
+
+/* 表單 */
+.f{margin-top:20px}
+.fl{color:#6e6e73;font-size:11px;letter-spacing:1.4px;margin:18px 2px 7px}
+.fv{background:#232325;border-radius:13px;padding:12px 13px;color:#e6e6ea;font-size:15px}
+.fv.dim{color:#8e8e93;font-size:13.5px;line-height:1.75}
+.seg{display:flex;background:#232325;border-radius:11px;padding:3px;gap:3px}
+.seg i{flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:13px;color:#8e8e93;font-style:normal}
+.seg i.on{background:#3a3218;color:#f5b93c}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;
+  border-bottom:1px solid #2a2a2d}
+.tog:last-child{border-bottom:0}
+.tog .l{color:#e6e6ea;font-size:14px}
+.tog .l small{color:#6e6e73;font-size:11px;display:block;margin-top:2px}
+.sw{width:40px;height:24px;border-radius:12px;background:#3a3a3e;position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#8e8e93}
+.sw.on{background:#f5b93c}
+.sw.on i{left:19px;background:#241d0c}
+.del{color:#e8503a;font-size:13.5px;text-align:center;background:#232325;border-radius:13px;
+  padding:13px;margin-top:22px}
+.usedby{color:#6e6e73;font-size:12px;line-height:2;margin-top:8px}
+.usedby b{color:#8e8e93;font-weight:400}
+</style>
+</head>
+<body>
+<div class="grid">
+
+<!-- ① 結構 -->
+<div class="cell">
+  <div class="st">第一層</div><div class="tt">結構</div>
+  <div class="ds">群組跟項目都能拖。右邊的小方塊是這一項要記哪些參數。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="nav"><span class="bk">‹</span><span class="h1">Sadhana 結構</span></div>
+    <div class="sub">拖動排序　·　左右拖可換群組</div>
+
+    <div class="g">
+      <div class="gh"><span class="hd">⣿</span><span class="nm">morning session</span><span class="mo">⋯</span></div>
+      <div class="box">
+        <div class="row"><span class="hd">⣿</span><span class="nm">Guru Pooja</span>
+          <span class="tags"><i class="tg on">F</i><i class="tg on">Y</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Maha Chant</span>
+          <span class="tags"><i class="tg on">F</i></span><span class="chev">›</span></div>
+      </div>
+    </div>
+
+    <div class="g">
+      <div class="gh"><span class="hd">⣿</span><span class="nm">Main sadhana</span><span class="mo">⋯</span></div>
+      <div class="box">
+        <div class="row"><span class="hd">⣿</span><span class="nm">Surya Kriya</span>
+          <span class="tags"><i class="tg on">R</i><i class="tg on">T</i><i class="tg on">F</i>
+          <i class="tg on">B</i><i class="tg on">S</i><i class="tg on">Y</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Yogasana</span>
+          <span class="tags"><i class="tg">R</i><i class="tg on">T</i><i class="tg on">F</i>
+          <i class="tg on">B</i><i class="tg on">S</i><i class="tg on">Y</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Shakti Chalana</span>
+          <span class="tags"><i class="tg on">R</i><i class="tg on">T</i><i class="tg on">F</i>
+          <i class="tg">B</i><i class="tg">S</i><i class="tg on">Y</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Shambhavi</span>
+          <span class="tags"><i class="tg">R</i><i class="tg on">T</i><i class="tg on">F</i>
+          <i class="tg">B</i><i class="tg">S</i><i class="tg on">Y</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Samyama</span>
+          <span class="tags"><i class="tg on">T</i><i class="tg on">F</i></span><span class="chev">›</span></div>
+        <div class="add">＋　新增項目</div>
+      </div>
+    </div>
+
+    <div class="g">
+      <div class="gh"><span class="hd">⣿</span><span class="nm">Break</span><span class="mo">⋯</span></div>
+      <div class="box">
+        <div class="row"><span class="hd">⣿</span><span class="nm">Shoonya</span>
+          <span class="tags"><i class="tg on">T</i><i class="tg on">F</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm">Breathe Watch</span>
+          <span class="tags"><i class="tg on">T</i><i class="tg on">B</i></span><span class="chev">›</span></div>
+      </div>
+    </div>
+
+    <div class="g">
+      <div class="gh"><span class="hd">⣿</span><span class="nm">Others　選配</span><span class="mo">⋯</span></div>
+      <div class="box">
+        <div class="row"><span class="hd">⣿</span><span class="nm opt">Angamardana</span>
+          <span class="tags"><i class="tg on">T</i><i class="tg on">F</i></span><span class="chev">›</span></div>
+        <div class="row"><span class="hd">⣿</span><span class="nm opt">Surya Shakti</span>
+          <span class="tags"><i class="tg on">R</i><i class="tg on">T</i></span><span class="chev">›</span></div>
+      </div>
+    </div>
+
+    <div class="legend">R 輪數　T 時間　F 專注　B 呼吸　S 細微　Y samyama</div>
+  </div>
+</div>
+
+<!-- ② 項目 -->
+<div class="cell">
+  <div class="st">第二層</div><div class="tt">單一項目</div>
+  <div class="ds">從結構點進來，或在選單上長按名字直接進。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="nav"><span class="bk">‹</span><span class="h1">Surya Kriya</span></div>
+
+    <div class="f">
+      <div class="fl">名稱</div>
+      <div class="fv">Surya Kriya</div>
+
+      <div class="fl">群組</div>
+      <div class="fv" style="display:flex;justify-content:space-between">
+        <span>Main sadhana</span><span class="chev">›</span></div>
+
+      <div class="fl">時刻</div>
+      <div class="seg"><i class="on">浮動</i><i>固定時刻</i></div>
+
+      <div class="fl">順序</div>
+      <div class="seg"><i>自由</i><i class="on">鏈：體式</i></div>
+      <div class="fv dim" style="margin-top:7px">體式：Surya Kriya → Yogasana。鏈內順序不可換，中間插別的會留一個斷開記號。</div>
+
+      <div class="fl">預估時長</div>
+      <div class="seg"><i class="on">用上次實際</i><i>固定值</i></div>
+      <div class="fv dim" style="margin-top:7px">上次 45 分　·　只影響預填，不影響紀錄</div>
+
+      <div class="fl">Finished 之後要問</div>
+      <div class="fv" style="padding:0">
+        <div class="tog"><span class="l">輪數<small>手動輸入，不預填</small></span><span class="sw on"><i></i></span></div>
+        <div class="tog"><span class="l">專注</span><span class="sw on"><i></i></span></div>
+        <div class="tog"><span class="l">呼吸</span><span class="sw on"><i></i></span></div>
+        <div class="tog"><span class="l">細微</span><span class="sw on"><i></i></span></div>
+        <div class="tog"><span class="l">samyama<small>是／否</small></span><span class="sw on"><i></i></span></div>
+      </div>
+
+      <div class="del">刪除這個項目</div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 參數 -->
+<div class="cell">
+  <div class="st">第三層</div><div class="tt">參數本身</div>
+  <div class="ds">量表的級距跟引導句在這裡改。改一次，所有用到它的項目一起變。</div>
+  <div class="p"><div class="nc"></div>
+    <div class="nav"><span class="bk">‹</span><span class="h1">專注　focus</span></div>
+
+    <div class="f">
+      <div class="fl">型別</div>
+      <div class="seg"><i class="on">評分</i><i>是／否</i><i>數字</i></div>
+
+      <div class="fl">級距</div>
+      <div class="seg"><i>3</i><i class="on">5</i><i>7</i><i>10</i></div>
+
+      <div class="fl">呈現</div>
+      <div class="seg"><i class="on">圓點</i><i>墨暈</i><i>滑桿</i></div>
+
+      <div class="fl">引導句</div>
+      <div class="fv dim" style="line-height:2">這一輪裡，你發現自己飄走了幾次？<br>回想那個「拉回來」的動作。</div>
+      <div class="fv dim" style="margin-top:7px;font-size:11.5px">
+        每個項目可以有自己的引導句。留空就用這一句。</div>
+
+      <div class="fl">記錄時</div>
+      <div class="fv" style="padding:0">
+        <div class="tog"><span class="l">預填上次的值<small>建議關閉</small></span><span class="sw"><i></i></span></div>
+        <div class="tog"><span class="l">顯示歷史平均<small>建議關閉</small></span><span class="sw"><i></i></span></div>
+        <div class="tog"><span class="l">長按才能確認</span><span class="sw on"><i></i></span></div>
+      </div>
+
+      <div class="fl">用在這些項目</div>
+      <div class="usedby">
+        <b>Guru Pooja</b>　<b>Maha Chant</b>　<b>Surya Kriya</b>　<b>Yogasana</b><br>
+        <b>Shakti Chalana</b>　<b>Shambhavi</b>　<b>Samyama</b>　<b>Shoonya</b><br>
+        <b>Angamardana</b>　　共 9 項
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

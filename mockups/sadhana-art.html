@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Sadhana 藝術方向</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#08090c; padding:28px clamp(10px,3vw,34px) 44px;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Songti TC",serif;
+  -webkit-font-smoothing:antialiased;
+}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:32px;align-items:flex-start}
+.col{width:min(380px,100%)}
+.cap{font-size:12.5px;color:#6b7480;letter-spacing:.6px;margin-bottom:10px;padding-left:2px;
+     font-family:-apple-system,"PingFang TC",sans-serif}
+.phone{width:100%;height:790px;border-radius:34px;overflow:hidden;position:relative;border:1px solid #222732}
+
+/* ── A 日輪 ── */
+.dial{background:#0b0d11;height:100%;padding:26px 24px;display:flex;flex-direction:column}
+.dial .d1{font-size:12px;color:#5d6470;letter-spacing:3px;font-family:-apple-system,sans-serif}
+.dial .d2{font-size:30px;color:#e8ecf3;font-weight:400;letter-spacing:1px;margin-top:6px}
+.legend{margin-top:auto;font-size:11.5px;color:#5d6470;line-height:2;letter-spacing:.4px;
+        font-family:-apple-system,"PingFang TC",sans-serif}
+.legend em{color:#c9a227;font-style:normal}
+
+/* ── B 墨線立軸 ── */
+.paper{background:#e9e3d6;height:100%;padding:30px 26px;position:relative}
+.paper .p1{font-size:11.5px;color:#a1968a;letter-spacing:4px;font-family:-apple-system,sans-serif}
+.paper .p2{font-size:26px;color:#2b2823;letter-spacing:2px;margin-top:4px;font-weight:400}
+.seal{position:absolute;right:26px;bottom:28px;width:38px;height:38px;border-radius:4px;
+      background:#a8342a;color:#f3e6d5;font-size:13px;line-height:38px;text-align:center;letter-spacing:1px}
+
+/* ── C 手勢 ── */
+.gest{background:#e9e3d6;height:100%;padding:34px 30px;display:flex;flex-direction:column;align-items:center}
+.gest .g0{font-size:11px;color:#a1968a;letter-spacing:4px;align-self:flex-start;font-family:-apple-system,sans-serif}
+.gest .g1{font-size:12.5px;color:#a8342a;letter-spacing:3px;margin-top:34px}
+.gest .g2{font-size:30px;color:#2b2823;letter-spacing:4px;margin-top:8px}
+.gest .g3{font-size:14px;color:#6f665c;line-height:2.1;margin-top:20px;text-align:center;max-width:270px}
+.gest .g4{font-size:12px;color:#a1968a;letter-spacing:2px;margin-top:auto;margin-bottom:14px;
+          font-family:-apple-system,"PingFang TC",sans-serif}
+.pips{display:flex;gap:7px;margin-bottom:26px}
+.pips i{width:20px;height:2px;background:#cfc5b4;display:block}
+.pips i.on{background:#a8342a}
+
+/* ── 年之牆 ── */
+.wall{margin-top:34px}
+.wall .cap{margin-bottom:12px}
+.wallbox{background:#0b0d11;border:1px solid #222732;border-radius:18px;padding:24px 26px}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ════ A ════ -->
+  <div class="col">
+    <div class="cap">A — 日輪：一天是一個圓，練習是圓周上的一段光</div>
+    <div class="phone"><div class="dial">
+      <div class="d1">SADHANA</div>
+      <div class="d2">七月二十五</div>
+      <svg id="dial" viewBox="0 0 340 340" style="margin:18px -8px 0"></svg>
+      <div class="legend">
+        弧長 ＝ 時間　·　明度 ＝ 專注<br>
+        <em>◆</em> 金點 ＝ samyama 未斷<br>
+        虛線 ＝ 尚未走到的地方
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ════ B ════ -->
+  <div class="col">
+    <div class="cap">B — 立軸：一天是一條墨線，濃淡是你自己給的</div>
+    <div class="phone"><div class="paper">
+      <div class="p1">SADHANA</div>
+      <div class="p2">七月二十五</div>
+      <svg id="scroll" viewBox="0 0 328 640" style="margin-top:16px"></svg>
+      <div class="seal">息</div>
+    </div></div>
+  </div>
+
+  <!-- ════ C ════ -->
+  <div class="col">
+    <div class="cap">C — 記錄的手勢：按住，讓墨暈開到對的濃度</div>
+    <div class="phone"><div class="gest">
+      <div class="g0">2 / 5</div>
+      <div class="g1">SURYA KRIYA</div>
+      <div class="g2">專注</div>
+      <div class="g3">這三輪裡，你發現自己飄走了幾次？<br>回想那個「拉回來」的動作。</div>
+      <svg id="blot" viewBox="0 0 260 260" style="margin-top:10px"></svg>
+      <div class="g4">按住不放　·　放開即定</div>
+      <div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+    </div></div>
+  </div>
+
+</div>
+
+<div class="wall">
+  <div class="cap">D — 一年：每天一個圓，掛成一面牆（回顧頁）</div>
+  <div class="wallbox"><svg id="year" viewBox="0 0 1210 250"></svg></div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+function pol(cx,cy,r,d){const a=(d-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]}
+function arc(cx,cy,r,d0,d1){const[x0,y0]=pol(cx,cy,r,d0),[x1,y1]=pol(cx,cy,r,d1);
+  return`M${x0} ${y0}A${r} ${r} 0 ${d1-d0>180?1:0} 1 ${x1} ${y1}`}
+const m=t=>{const[h,mm]=t.split(':').map(Number);return h*60+mm};
+const deg=t=>m(t)/1440*360;
+
+/* ── A 日輪 ───────────────────────────── */
+const D=document.getElementById('dial'),cx=170,cy=170,R=126;
+D.appendChild(el('circle',{cx,cy,r:R,fill:'none',stroke:'#1b1f27','stroke-width':1}));
+for(let h=0;h<24;h+=3){const[x0,y0]=pol(cx,cy,R+9,h*15),[x1,y1]=pol(cx,cy,R+15,h*15);
+  D.appendChild(el('line',{x1:x0,y1:y0,x2:x1,y2:y1,stroke:'#2b313c','stroke-width':1}));
+  const[tx,ty]=pol(cx,cy,R+27,h*15);
+  const t=el('text',{x:tx,y:ty+4,fill:'#4a515d','font-size':10,'text-anchor':'middle','font-family':'system-ui'});
+  t.textContent=h; D.appendChild(t)}
+
+const done=[
+ {a:'6:12',b:'6:38',f:.30,s:0,n:'Awake'},
+ {a:'6:45',b:'7:12',f:.62,s:1,n:'Pooja'},
+ {a:'7:20',b:'8:05',f:.95,s:1,n:'Surya Kriya'},
+ {a:'8:05',b:'8:40',f:.55,s:0,n:'Yogasana'},
+];
+const todo=[['8:45','9:15'],['9:15','9:36'],['10:00','10:40'],['12:00','12:20'],
+            ['13:00','17:00'],['17:30','17:50'],['19:00','20:00'],['20:00','20:40']];
+todo.forEach(([a,b])=>D.appendChild(el('path',{d:arc(cx,cy,R,deg(a),deg(b)),fill:'none',
+  stroke:'#252b35','stroke-width':7,'stroke-dasharray':'1 5','stroke-linecap':'round'})));
+done.forEach(o=>{
+  D.appendChild(el('path',{d:arc(cx,cy,R,deg(o.a),deg(o.b)),fill:'none',stroke:'#ff5a3c',
+    'stroke-width':7+o.f*9,'stroke-linecap':'round',opacity:.20+o.f*.8}));
+  if(o.s){const[gx,gy]=pol(cx,cy,R+0,(deg(o.a)+deg(o.b))/2);
+    D.appendChild(el('circle',{cx:gx,cy:gy,r:2.4,fill:'#f5c451'}))}
+});
+const[nx,ny]=pol(cx,cy,R+16,deg('11:05'));
+D.appendChild(el('line',{x1:cx,y1:cy,x2:nx,y2:ny,stroke:'#f0506e','stroke-width':.8,opacity:.55}));
+const cl=el('text',{x:cx,y:cy-4,fill:'#e8ecf3','font-size':26,'text-anchor':'middle','letter-spacing':2});
+cl.textContent='4／13'; D.appendChild(cl);
+const cs=el('text',{x:cx,y:cy+18,fill:'#5d6470','font-size':11,'text-anchor':'middle','letter-spacing':2,'font-family':'system-ui'});
+cs.textContent='2h13'; D.appendChild(cs);
+
+/* ── B 立軸 ───────────────────────────── */
+const S=document.getElementById('scroll'),X=64;
+const f=el('filter',{id:'ink',x:'-60%',y:'-60%',width:'220%',height:'220%'});
+f.appendChild(el('feTurbulence',{type:'fractalNoise',baseFrequency:'0.05',numOctaves:3,seed:7,result:'n'}));
+f.appendChild(el('feDisplacementMap',{in:'SourceGraphic',in2:'n',scale:9,xChannelSelector:'R',yChannelSelector:'G'}));
+const d1=el('defs');d1.appendChild(f);S.appendChild(d1);
+S.appendChild(el('line',{x1:X,y1:20,x2:X,y2:600,stroke:'#c4b9a7','stroke-width':1}));
+
+const rows=[
+ {y:44, n:'Awake',        t:'六時十二　醒　六時三八　起',ink:.30,r:9, s:0},
+ {y:104,n:'Guru Pooja',   t:'六時四五',                  ink:.62,r:13,s:1},
+ {y:150,n:'Maha Chanting',t:'七時○二',                  ink:.45,r:11,s:0},
+ {y:212,n:'Surya Kriya',  t:'七時二十　三輪　四十五分',   ink:.95,r:21,s:1},
+ {y:282,n:'Yogasana',     t:'八時○五　三十五分',         ink:.55,r:14,s:0},
+ {y:348,n:'Shakti Chalana',t:'',                        ink:0,  r:8, s:0},
+ {y:400,n:'Shambhavi',    t:'',                         ink:0,  r:8, s:0},
+ {y:452,n:'Brunch',       t:'',                         ink:0,  r:8, s:0},
+ {y:504,n:'Shoonya',      t:'',                         ink:0,  r:8, s:0},
+ {y:556,n:'Presence',     t:'',                         ink:0,  r:8, s:0},
+];
+rows.forEach(o=>{
+  if(o.ink>0){
+    S.appendChild(el('circle',{cx:X,cy:o.y,r:o.r,fill:'#241f1a',opacity:.10+o.ink*.28,filter:'url(#ink)'}));
+    S.appendChild(el('circle',{cx:X,cy:o.y,r:o.r*.55,fill:'#1a1611',opacity:.25+o.ink*.62,filter:'url(#ink)'}));
+  } else {
+    S.appendChild(el('circle',{cx:X,cy:o.y,r:o.r,fill:'none',stroke:'#c4b9a7','stroke-width':1,'stroke-dasharray':'2 4'}));
+  }
+  const a=el('text',{x:X+34,y:o.y-2,fill:o.ink?'#2b2823':'#b3a897','font-size':15,'letter-spacing':1});
+  a.textContent=o.n; S.appendChild(a);
+  if(o.t){const b=el('text',{x:X+34,y:o.y+17,fill:'#8c8377','font-size':11.5,'letter-spacing':1.5});
+    b.textContent=o.t; S.appendChild(b)}
+  if(o.s){S.appendChild(el('rect',{x:X-30,y:o.y-6,width:12,height:12,rx:2,fill:'#a8342a',opacity:.85}))}
+});
+
+/* ── C 墨暈 ───────────────────────────── */
+const B=document.getElementById('blot'),d2=el('defs');
+const f2=el('filter',{id:'ink2',x:'-60%',y:'-60%',width:'220%',height:'220%'});
+f2.appendChild(el('feTurbulence',{type:'fractalNoise',baseFrequency:'0.035',numOctaves:4,seed:3,result:'n'}));
+f2.appendChild(el('feDisplacementMap',{in:'SourceGraphic',in2:'n',scale:16,xChannelSelector:'R',yChannelSelector:'G'}));
+d2.appendChild(f2);B.appendChild(d2);
+B.appendChild(el('circle',{cx:130,cy:130,r:104,fill:'none',stroke:'#cfc5b4','stroke-width':1,'stroke-dasharray':'2 6'}));
+B.appendChild(el('circle',{cx:130,cy:130,r:74,fill:'#241f1a',opacity:.14,filter:'url(#ink2)'}));
+B.appendChild(el('circle',{cx:130,cy:130,r:54,fill:'#1a1611',opacity:.42,filter:'url(#ink2)'}));
+B.appendChild(el('circle',{cx:130,cy:130,r:31,fill:'#120f0c',opacity:.78,filter:'url(#ink2)'}));
+
+/* ── D 年之牆 ─────────────────────────── */
+const Y=document.getElementById('year');
+let i=0;
+for(let r=0;r<5;r++)for(let c=0;c<30;c++){
+  const x=18+c*40,y=26+r*48,q=Math.max(0,Math.min(1,(Math.sin(i*1.7)+Math.cos(i*.9)+1.1)/2.6));
+  const miss=(i%17===5||i%23===9);
+  Y.appendChild(el('circle',{cx:x,cy:y,r:14,fill:'none',stroke:'#1e232c','stroke-width':1}));
+  if(!miss)Y.appendChild(el('path',{d:arc(x,y,14,20,20+60+q*260),fill:'none',stroke:'#ff5a3c',
+    'stroke-width':2.4,'stroke-linecap':'round',opacity:.22+q*.78}));
+  i++;
+}
+</script>
+</body>
+</html>

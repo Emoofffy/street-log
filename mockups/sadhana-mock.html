@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Sadhana 版面草稿</title>
+<style>
+:root{
+  --bg:#0f1115; --bg-elev:#171a21; --bg-elev2:#1f232c; --line:#2a2f3a;
+  --text:#e8ecf3; --text-dim:#9aa4b2; --text-faint:#6b7480;
+  --accent:#ff5a3c; --accent-2:#34d399; --accent-3:#60a5fa; --gold:#f5c451; --danger:#f0506e;
+  --jr-card:#2a2a2d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#08090c; padding:28px clamp(10px,3vw,36px);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Helvetica Neue",sans-serif;
+  color:var(--text); -webkit-font-smoothing:antialiased;
+}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:34px;align-items:flex-start}
+.col{width:min(380px,100%)}
+.cap{font-size:13px;color:var(--text-faint);letter-spacing:.4px;margin-bottom:10px;padding-left:2px}
+.phone{width:100%; height:800px; background:var(--bg); border-radius:34px;
+  border:1px solid #222732; padding:16px 18px 0; overflow:hidden; position:relative;
+}
+
+/* ── 頁首 ───────────────────────────── */
+.nav{display:flex;align-items:center;gap:12px;height:34px}
+.back{color:var(--text-dim);font-size:22px;line-height:1}
+.h1{font-size:26px;font-weight:800;letter-spacing:-.4px;margin:10px 0 2px}
+.sub{font-size:13px;color:var(--text-dim)}
+.pbar{height:4px;background:var(--bg-elev2);border-radius:99px;margin:14px 0 4px;overflow:hidden}
+.pbar i{display:block;height:100%;width:46%;background:var(--accent);border-radius:99px}
+
+/* ── 分組與列 ────────────────────────── */
+.grp{font-size:11.5px;color:var(--text-faint);letter-spacing:1.6px;margin:18px 0 8px;text-transform:uppercase}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,47,58,.55)}
+.row:last-child{border-bottom:0}
+.nm{font-size:15.5px;font-weight:500}
+.row.todo .nm{color:var(--text-faint);font-weight:400}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip{font-size:11.5px;color:var(--text-dim);background:var(--bg-elev2);border-radius:6px;padding:3px 7px;letter-spacing:.2px}
+.chip.t{color:var(--text)}
+.chip.sam{color:var(--accent-2);background:rgba(52,211,153,.12)}
+.chip.no{color:var(--text-faint)}
+.dots{display:inline-flex;gap:3px;vertical-align:-1px;margin-left:5px}
+.dots b{width:5px;height:5px;border-radius:99px;background:#3a404c;display:block}
+.dots b.on{background:var(--accent)}
+.right{font-size:12.5px;color:var(--text-faint);white-space:nowrap;padding-top:2px}
+.dash{color:#3a404c;font-size:16px}
+
+/* ── 時間帶 ─────────────────────────── */
+.band{position:relative;margin-top:16px;height:596px}
+.hr{position:absolute;left:0;right:0;border-top:1px solid rgba(42,47,58,.5)}
+.hrl{position:absolute;left:0;font-size:11px;color:var(--text-faint);transform:translateY(-6px)}
+.blk{position:absolute;left:46px;right:12px;border-radius:8px;padding:7px 10px;overflow:hidden}
+.blk .bn{font-size:12.5px;font-weight:500}
+.blk .bt{font-size:11px;opacity:.72;margin-top:1px}
+.b-gray{background:rgba(154,164,178,.16);color:var(--text-dim);border-left:2px solid #59616f}
+.b-acc{background:rgba(255,90,60,.16);color:#ffb0a0;border-left:2px solid var(--accent)}
+.b-sel{background:rgba(255,90,60,.3);color:#fff;border:1px solid var(--accent);box-shadow:0 4px 18px rgba(255,90,60,.28)}
+.hnd{position:absolute;left:50%;transform:translateX(-50%);width:44px;height:5px;border-radius:99px;background:var(--accent)}
+.hnd.top{top:-2px} .hnd.bot{bottom:-2px}
+.nowline{position:absolute;left:36px;right:0;border-top:1px dashed rgba(240,80,110,.55)}
+.pop{position:absolute;left:46px;right:12px;background:var(--bg-elev);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between}
+.pop .tm{font-size:15px;font-weight:600;letter-spacing:.3px}
+.pop .du{font-size:11.5px;color:var(--text-dim);margin-top:1px}
+.stp{display:flex;gap:6px}
+.stp span{width:30px;height:30px;border-radius:8px;background:var(--bg-elev2);color:var(--text-dim);font-size:15px;display:flex;align-items:center;justify-content:center}
+
+/* ── 一頁一題 ───────────────────────── */
+.q-wrap{display:flex;flex-direction:column;height:734px;padding-top:30px}
+.q-of{font-size:11.5px;color:var(--text-faint);letter-spacing:2px}
+.q-nm{font-size:13px;color:var(--accent);margin-top:26px;letter-spacing:.5px}
+.q-lb{font-size:34px;font-weight:800;letter-spacing:-.6px;margin-top:6px}
+.q-tx{font-size:15.5px;line-height:1.85;color:var(--text-dim);margin-top:22px;max-width:290px}
+.scale{display:flex;gap:16px;margin-top:auto;margin-bottom:26px}
+.scale i{width:44px;height:44px;border-radius:99px;border:1.5px solid var(--line);display:block}
+.hint{font-size:12px;color:var(--text-faint);text-align:center;margin-bottom:20px;letter-spacing:.3px}
+.hold{height:52px;border-radius:14px;border:1px solid var(--line);color:var(--text-faint);font-size:14px;display:flex;align-items:center;justify-content:center;margin-bottom:22px}
+.pips{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.pips i{width:22px;height:2.5px;border-radius:99px;background:var(--bg-elev2);display:block}
+.pips i.on{background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ══ 1. 今日流程 ══ -->
+  <div class="col">
+    <div class="cap">1 — 今日流程（進入 Sadhana 的第一眼）</div>
+    <div class="phone">
+      <div class="nav"><span class="back">‹</span></div>
+      <div class="h1">Sadhana</div>
+      <div class="sub">7月25日 星期六 · 6/13 已記 · 3h05</div>
+      <div class="pbar"><i></i></div>
+
+      <div class="grp">起</div>
+      <div class="row">
+        <div>
+          <div class="nm">Awake</div>
+          <div class="meta">
+            <span class="chip t">6:12 醒 → 6:38 離床</span>
+            <span class="chip">躺 26 分</span>
+            <span class="chip">精神<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">早課</div>
+      <div class="row">
+        <div>
+          <div class="nm">Guru Pooja</div>
+          <div class="meta">
+            <span class="chip">專注<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b></b></span></span>
+            <span class="chip sam">samyama ✓</span>
+          </div>
+        </div>
+        <div class="right">6:45</div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="nm">Maha Chanting</div>
+          <div class="meta">
+            <span class="chip">專注<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></span></span>
+          </div>
+        </div>
+        <div class="right">7:02</div>
+      </div>
+
+      <div class="grp">體式</div>
+      <div class="row">
+        <div>
+          <div class="nm">Surya Kriya</div>
+          <div class="meta">
+            <span class="chip t">7:20 → 8:05</span>
+            <span class="chip">3 輪</span>
+            <span class="chip">專注<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b></span></span>
+            <span class="chip">呼吸<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></span></span>
+            <span class="chip">細微<span class="dots"><b class="on"></b><b class="on"></b><b></b><b></b><b></b></span></span>
+            <span class="chip sam">samyama ✓</span>
+          </div>
+        </div>
+        <div class="right">45 分</div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="nm">Yogasana</div>
+          <div class="meta">
+            <span class="chip t">8:05 → 8:40</span>
+            <span class="chip">專注<span class="dots"><b class="on"></b><b class="on"></b><b class="on"></b><b></b><b></b></span></span>
+            <span class="chip no">samyama ✕</span>
+          </div>
+        </div>
+        <div class="right">35 分</div>
+      </div>
+
+      <div class="grp">能量</div>
+      <div class="row todo">
+        <div><div class="nm">Shakti Chalana Kriya</div></div>
+        <div class="right dash">—</div>
+      </div>
+      <div class="row todo">
+        <div><div class="nm">Shambhavi</div></div>
+        <div class="right dash">—</div>
+      </div>
+
+      <div class="grp">食 · 日間</div>
+      <div class="row todo"><div><div class="nm">Brunch</div></div><div class="right dash">—</div></div>
+      <div class="row todo"><div><div class="nm">Shoonya</div></div><div class="right dash">—</div></div>
+      <div class="row todo"><div><div class="nm">Work</div></div><div class="right dash">—</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 2. 時間帶調整 ══ -->
+  <div class="col">
+    <div class="cap">2 — 拖時間帶調整起訖（點色塊展開微調）</div>
+    <div class="phone">
+      <div class="nav"><span class="back">‹</span></div>
+      <div class="h1">時間</div>
+      <div class="sub">拖動色塊兩端調整，不需要當下按鍵</div>
+
+      <div class="band">
+        <div class="hr" style="top:0"></div>      <div class="hrl" style="top:0">6:00</div>
+        <div class="hr" style="top:66px"></div>   <div class="hrl" style="top:66px">7:00</div>
+        <div class="hr" style="top:132px"></div>  <div class="hrl" style="top:132px">8:00</div>
+        <div class="hr" style="top:198px"></div>  <div class="hrl" style="top:198px">9:00</div>
+        <div class="hr" style="top:264px"></div>  <div class="hrl" style="top:264px">10:00</div>
+        <div class="hr" style="top:330px"></div>  <div class="hrl" style="top:330px">11:00</div>
+        <div class="hr" style="top:396px"></div>  <div class="hrl" style="top:396px">12:00</div>
+        <div class="hr" style="top:462px"></div>  <div class="hrl" style="top:462px">13:00</div>
+
+        <div class="blk b-gray" style="top:13px;height:29px">
+          <div class="bn">Awake · 躺床</div><div class="bt">6:12 → 6:38</div>
+        </div>
+        <div class="blk b-gray" style="top:49px;height:30px">
+          <div class="bn">Guru Pooja · Maha Chanting</div><div class="bt">6:45 → 7:12</div>
+        </div>
+
+        <div class="blk b-sel" style="top:88px;height:50px">
+          <div class="hnd top"></div>
+          <div class="bn">Surya Kriya</div><div class="bt">7:20 → 8:05 · 45 分 · 3 輪</div>
+          <div class="hnd bot"></div>
+        </div>
+
+        <div class="pop" style="top:148px">
+          <div>
+            <div class="tm">7:20 &nbsp;→&nbsp; 8:05</div>
+            <div class="du">45 分 · 預設接在前一項之後</div>
+          </div>
+          <div class="stp"><span>−</span><span>+</span></div>
+        </div>
+
+        <div class="blk b-acc" style="top:216px;height:38px">
+          <div class="bn">Yogasana</div><div class="bt">8:05 → 8:40</div>
+        </div>
+        <div class="blk b-gray" style="top:262px;height:26px;opacity:.5">
+          <div class="bn">Shakti Chalana Kriya</div><div class="bt">建議 8:45 → 9:15</div>
+        </div>
+        <div class="blk b-gray" style="top:296px;height:26px;opacity:.5">
+          <div class="bn">Shambhavi</div><div class="bt">建議 9:15 → 9:36</div>
+        </div>
+        <div class="nowline" style="top:340px"></div>
+        <div class="hrl" style="top:340px;left:auto;right:0;color:#f0506e">現在</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 3. 一頁一題 ══ -->
+  <div class="col">
+    <div class="cap">3 — 品質參數：一頁一題、無預設值</div>
+    <div class="phone">
+      <div class="q-wrap">
+        <div class="q-of">2 / 5</div>
+        <div class="q-nm">SURYA KRIYA</div>
+        <div class="q-lb">專注</div>
+        <div class="q-tx">這三輪裡，你發現自己飄走了幾次？<br>不用回想細節，回想那個「拉回來」的動作。</div>
+
+        <div class="scale">
+          <i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="hint">往上滑到下一題 · 呼吸</div>
+        <div class="hold">長按確認</div>
+        <div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

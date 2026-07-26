@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>進入與摺疊</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:30px clamp(10px,3vw,30px) 44px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;align-items:flex-start}
+.col{width:min(372px,100%)}
+.cap{font-size:12.5px;color:#7a828e;margin-bottom:4px}
+.cap b{color:#e8ecf3;font-weight:600}
+.cap2{font-size:11.5px;color:#565d68;margin-bottom:12px;line-height:1.6}
+.phone{width:100%;height:790px;border-radius:38px;background:#1c1c1e;position:relative;
+  overflow:hidden;border:1px solid #2a2a2d;padding:0 28px}
+.notch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:104px;height:28px;
+  border-radius:15px;background:#0a0a0b}
+
+/* ── 首頁 ── */
+.jr{padding-top:76px}
+.jr-t{font-size:29px;font-weight:800;color:#e8ecf3;letter-spacing:-.5px}
+.jr-d1{font-size:13.5px;color:#8e8e93;margin-top:10px}
+.jr-d2{font-size:29px;font-weight:800;color:#e8ecf3;letter-spacing:-.5px;margin:1px 0 18px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.card{border-radius:17px;padding:16px 15px;min-height:96px;position:relative}
+.card.big{grid-row:span 2;background:#2a2a2d;min-height:206px;display:flex;flex-direction:column}
+.card.r{background:#4d2529} .card.b{background:#29314d}
+.c-t{font-size:19px;font-weight:700;color:#e8ecf3}
+.c-s{font-size:12px;color:#9a9aa0;margin-top:5px;line-height:1.5}
+.nx{margin-top:auto}
+.nx .lb{font-size:10.5px;color:#8e8e93;letter-spacing:2px}
+.nx .nm{font-size:17px;color:#f5b93c;font-weight:600;margin-top:3px}
+.startbtn{margin-top:12px;height:42px;border-radius:12px;background:#f5b93c;color:#241d0c;
+  font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+
+/* ── 練習畫面 ── */
+.title{color:#c7c7cc;font-size:21px;padding-top:92px}
+.rail{position:relative;margin-top:24px;height:330px}
+.line{position:absolute;left:64px;width:1.5px;background:#4a4a4d}
+.pill{position:absolute;left:58px;width:13px;border-radius:7px;background:#6e6e73}
+.fold{position:absolute;left:54px;width:21px;height:34px;border-radius:11px;background:#3a3a3e;
+  border:1px solid #4a4a4d}
+.fold i{position:absolute;left:4px;right:4px;height:1px;background:#5c5c61;display:block}
+.tlab{position:absolute;left:0;width:44px;color:#8e8e93;font-size:13.5px;text-align:right}
+.nlab{position:absolute;left:90px;color:#8e8e93;font-size:14.5px;white-space:nowrap}
+.flab{position:absolute;left:90px;color:#6e6e73;font-size:13px}
+.gaplab{position:absolute;left:90px;color:#3a3a3d;font-size:11px}
+.bulb{position:absolute;left:54px;width:21px;height:21px;border-radius:50%;background:#f5b93c;
+  box-shadow:0 0 22px rgba(245,185,60,.3)}
+.bulb.idle{background:none;border:1.5px solid #6e6e73;box-shadow:none}
+.stem{position:absolute;left:60px;width:9px;border-radius:5px 5px 0 0;background:#f5b93c}
+.nlab.on{color:#f5b93c;font-size:19px}
+.nlab.idle{color:#c7c7cc;font-size:19px}
+.tlab.on{color:#c7c7cc}
+.tmwrap{text-align:center;margin-top:6px}
+.tmlab{color:#8e8e93;font-size:15px}
+.tmval{color:#d4d4d8;font-size:58px;font-weight:300;margin-top:2px;font-variant-numeric:tabular-nums}
+.big-start{text-align:center;margin-top:26px}
+.big-start .b{display:inline-block;width:150px;height:150px;border-radius:50%;
+  border:1.5px solid #f5b93c;color:#f5b93c;font-size:21px;line-height:150px;letter-spacing:1px}
+.sw{text-align:center;color:#5c5c61;font-size:12px;margin-top:22px}
+.fin{text-align:center;margin-top:56px}
+.fin span{color:#e8503a;font-size:20px;padding:10px 24px;border-radius:12px;display:inline-block;cursor:pointer}
+.fin span:active{background:rgba(232,80,58,.12)}
+.adj{text-align:center;color:#48484c;font-size:11.5px;margin-top:13px}
+
+.note{width:min(820px,100%);margin:26px auto 0;background:#0e1116;border:1px solid #1e232c;
+  border-radius:16px;padding:18px 22px;font-size:12.5px;color:#8d95a2;line-height:2.1}
+.note b{color:#e8ecf3}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cap"><b>① 進入</b>　首頁卡本身就是開始鍵</div>
+    <div class="cap2">卡上直接寫著下一項。一點就進去而且已經在計時，中間沒有任何選單。</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="jr">
+        <div class="jr-t">Journal</div>
+        <div class="jr-d1">7月25日</div>
+        <div class="jr-d2">星期六</div>
+        <div class="cards">
+          <div class="card big">
+            <div class="c-t">Sadhana</div>
+            <div class="c-s">5 / 13　·　已練 2h40</div>
+            <div class="nx">
+              <div class="lb">下一項</div>
+              <div class="nm">Shakti Chalana</div>
+              <div class="startbtn">▶　開始</div>
+            </div>
+          </div>
+          <div class="card r"><div class="c-t">Physics</div><div class="c-s">Push + Leg day</div></div>
+          <div class="card b"><div class="c-t">Journal</div><div class="c-s">Daily Parameters</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>② 待啟動</b>　空心球，還沒開始</div>
+    <div class="cap2">Finished 之後回到這裡。點名字可以換一項，這是唯一「選」的機會，而且是在門內。</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="title">Start Practice</div>
+      <div class="rail" id="r2"></div>
+      <div class="big-start"><span class="b">Start</span></div>
+      <div class="sw">點名字換一項　·　點時間可改</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>③ 進行中</b>　柱子會摺疊（可按 Finished）</div>
+    <div class="cap2">只有最近兩項保持等比，更早的收成一顆摺疊丸。柱子再也不會長到塞不下。</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="title">Start Practice</div>
+      <div class="rail" id="r3"></div>
+      <div class="tmwrap"><div class="tmlab">timer</div><div class="tmval" id="tm">00:00</div></div>
+      <div class="fin"><span id="fin">Finished</span></div>
+      <div class="adj" id="adj">開始 9:12　·　點時間可改</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>摺疊規則：</b>進行中的那一項完整、往前保留兩項等比、更早的全部收成一顆丸子（上面三條細線代表裡面還有東西）。
+  丸子旁寫「5 項 · 2h40」，點它就展開成今天完整的十三項——<b>摺疊丸就是通往完整清單的門</b>，不用另外做入口。
+</div>
+
+<script>
+const M2=m=>Math.floor(m/60)+':'+String(m%60).padStart(2,'0');
+const DUR=m=>m>=60?(Math.floor(m/60)+'h'+(m%60?String(m%60).padStart(2,'0'):'')):(m+'分');
+
+let DONE=[
+ {n:'Awake',t:6*60+12,d:26},{n:'Guru Pooja',t:6*60+45,d:17},{n:'Maha Chant',t:7*60+2,d:18},
+ {n:'Surya Kriya',t:7*60+20,d:45},{n:'Yogasana',t:8*60+5,d:35},
+];
+const QUEUE=['Shakti Chalana','Shambhavi','Shoonya','Presence Time'];
+let qi=0, startMin=9*60+12, elapsed=0, t0=Date.now(), KEEP=2;
+
+/* 畫柱子：running=true 時球是實心並長水銀 */
+function rail(id,running){
+ const R=document.getElementById(id); R.innerHTML='';
+ const K=1.6, put=h=>R.insertAdjacentHTML('beforeend',h);
+ let y=6;
+
+ /* ① 摺疊丸：最近 KEEP 項以外的全部 */
+ const old=DONE.slice(0,Math.max(0,DONE.length-KEEP));
+ const vis=DONE.slice(Math.max(0,DONE.length-KEEP));
+ if(old.length){
+   const sum=old.reduce((s,o)=>s+o.d,0);
+   put(`<div class="fold" style="top:${y}px"><i style="top:9px"></i><i style="top:16px"></i><i style="top:23px"></i></div>`);
+   put(`<div class="tlab" style="top:${y+10}px">${M2(old[0].t)}</div>`);
+   put(`<div class="flab" style="top:${y+10}px">${old.length} 項　·　${DUR(sum)}　⌄</div>`);
+   y+=34+6;
+ }
+
+ /* ② 保留的最近幾項：嚴格等比 */
+ let prev=old.length?old[old.length-1].t+old[old.length-1].d:null;
+ vis.forEach(o=>{
+   if(prev!=null){
+     const g=o.t-prev;
+     if(g>=20){const h=30+Math.min(40,Math.sqrt(g)*4.5);
+       put(`<div class="gaplab" style="top:${y+h/2-7}px">空 ${DUR(g)}</div>`); y+=h}
+     else y+=g*K;
+   }
+   const h=Math.max(o.d*K,18);
+   put(`<div class="pill" style="top:${y}px;height:${h}px"></div>`);
+   put(`<div class="tlab" style="top:${y+h/2-9}px">${M2(o.t)}</div>`);
+   put(`<div class="nlab" style="top:${y+h/2-9}px">${o.n}</div>`);
+   prev=o.t+o.d; y+=h+5;
+ });
+
+ /* ③ 現在 */
+ const g=startMin-prev;
+ if(g>=20){const h=30+Math.min(40,Math.sqrt(g)*4.5);
+   put(`<div class="gaplab" style="top:${y+h/2-7}px">空 ${DUR(g)}</div>`); y+=h}
+ else if(g>0) y+=g*K;
+
+ put(`<div class="line" style="top:6px;height:${y}px"></div>`);
+ if(running){
+   const e=elapsed+Math.floor((Date.now()-t0)/1000), sh=Math.max(Math.round(e/60*K),3);
+   put(`<div class="stem" style="top:${y}px;height:${sh+11}px"></div>`);
+   put(`<div class="bulb" style="top:${y+sh+5}px"></div>`);
+   put(`<div class="tlab on" style="top:${y+sh+5}px">${M2(startMin)}</div>`);
+   put(`<div class="nlab on" style="top:${y+sh+3}px">${QUEUE[qi]}</div>`);
+   R.style.height=Math.max(330,y+sh+46)+'px';
+ } else {
+   put(`<div class="bulb idle" style="top:${y+4}px"></div>`);
+   put(`<div class="tlab" style="top:${y+5}px">—</div>`);
+   put(`<div class="nlab idle" style="top:${y+2}px">${QUEUE[qi]}</div>`);
+   R.style.height=Math.max(330,y+46)+'px';
+ }
+}
+
+function tick(){
+  const e=elapsed+Math.floor((Date.now()-t0)/1000);
+  document.getElementById('tm').textContent=
+    String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0');
+}
+document.getElementById('fin').onclick=()=>{
+  const mins=Math.max(1,Math.round((elapsed+(Date.now()-t0)/1000)/60));
+  DONE.push({n:QUEUE[qi],t:startMin,d:mins});
+  startMin+=mins+3; qi=(qi+1)%QUEUE.length; elapsed=0; t0=Date.now();
+  document.getElementById('adj').textContent=`開始 ${M2(startMin)}　·　點時間可改`;
+  rail('r2',false); rail('r3',true); tick();
+};
+rail('r2',false); rail('r3',true); tick();
+setInterval(()=>{tick(); rail('r3',true);},1000);
+</script>
+</body>
+</html>

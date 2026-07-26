@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>鏈與自由項目</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090c;padding:28px clamp(10px,3vw,32px) 46px;max-width:100%;overflow-x:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;align-items:flex-start}
+.col{width:min(392px,100%)}
+.cap{font-size:12.5px;color:#7a828e;margin-bottom:4px}
+.cap b{color:#e8ecf3;font-weight:600}
+.cap2{font-size:11.5px;color:#565d68;margin-bottom:11px;line-height:1.6}
+.phone{width:100%;height:800px;border-radius:32px;border:1px solid #222732;background:#0b0d11;
+  overflow:hidden;position:relative;padding:20px 18px}
+.hd{font-size:11px;color:#5d6470;letter-spacing:3px}
+.hd2{font-size:22px;color:#e8ecf3;font-weight:600;margin-top:4px}
+.hd3{font-size:12px;color:#6b7480;margin-top:3px}
+svg{display:block}
+.note{width:min(814px,100%);margin:26px auto 0;background:#0e1116;border:1px solid #1e232c;
+  border-radius:16px;padding:18px 22px;font-size:12.5px;color:#8d95a2;line-height:2.1}
+.note b{color:#e8ecf3}
+.k{display:inline-block;width:9px;height:2px;background:#8d95a2;vertical-align:3px;margin:0 3px}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cap"><b>還沒做的部分</b>　鏈與自由項目怎麼分辨</div>
+    <div class="cap2">左邊有豎線串起來的是鏈，順序不可換。沒有線、標著「隨時」的可以插在任何地方。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十五</div>
+      <div class="hd3">現在 9:20　·　已記 5 / 13</div>
+      <svg id="a" viewBox="0 0 356 686" style="margin-top:12px"></svg>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="cap"><b>鏈被打斷</b>　這是資訊，不是錯誤</div>
+    <div class="cap2">體式那條鏈中間插了 Brunch，串線在該處斷開並標記。回顧時看得出今天是不是一氣呵成。</div>
+    <div class="phone">
+      <div class="hd">SADHANA</div>
+      <div class="hd2">七月二十六</div>
+      <div class="hd3">練習 3h48　·　一條鏈斷成兩段</div>
+      <svg id="b" viewBox="0 0 356 686" style="margin-top:12px"></svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>三個屬性互相獨立：</b>時刻（錨定／浮動）· 順序（屬於某鏈／自由）· 參數集合。<br>
+  <b>高亮只在鏈進行到一半時出現</b>——那時候合法的下一項真的只有一個。鏈還沒開始時，所有可起頭的項目一律平等，不猜你要做哪個。
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function E(t,a,x){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);
+  if(x!=null)e.textContent=x;return e}
+const M=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const DUR=m=>m>=60?(Math.floor(m/60)+'h'+(m%60?String(m%60).padStart(2,'0'):'')):(m+'分');
+const COL=f=>`rgba(255,90,60,${(.24+f*.76).toFixed(2)})`;
+const GOLD='#f5c451';
+const X=64,W=356-X-8,CH=X-14;      /* CH：鏈的豎線 x 位置 */
+
+/* ══ A：還沒做的部分 ══ */
+(function(){
+ const S=document.getElementById('a');
+ /* 已記錄（壓縮呈現，只是背景） */
+ let y=8;
+ [['Awake · 躺床',26,.3,1],['Guru Pooja',17,.62,0],['Maha Chanting',18,.45,0],
+  ['Surya Kriya',45,.95,0],['Yogasana',35,.55,0]].forEach(([n,d,f,soft])=>{
+   const h=Math.max(d*.62,17);
+   S.appendChild(E('rect',{x:X,y,width:W,height:h,rx:5,
+     fill:soft?'rgba(154,164,178,.10)':COL(f),opacity:.45}));
+   S.appendChild(E('text',{x:X+12,y:y+h/2+4.5,fill:'rgba(255,255,255,.5)','font-size':12},n));
+   S.appendChild(E('text',{x:X+W-11,y:y+h/2+4.5,fill:'rgba(255,255,255,.32)','font-size':10.5,
+     'text-anchor':'end'},DUR(d)));
+   y+=h+3;
+ });
+ /* 現在 */
+ y+=6;
+ S.appendChild(E('line',{x1:X-16,y1:y,x2:X+W,y2:y,stroke:'#f0506e','stroke-width':1,
+   'stroke-dasharray':'4 4',opacity:.7}));
+ S.appendChild(E('text',{x:X-20,y:y+4,fill:'#f0506e','font-size':10,'text-anchor':'end'},'現在'));
+ S.appendChild(E('text',{x:X+W,y:y-5,fill:'#f0506e','font-size':10.5,'text-anchor':'end'},'9:20'));
+ y+=20;
+
+ /* 待做清單 */
+ const LIST=[
+  {n:'Shakti Chalana',chain:'能量',pos:'head',next:1,est:30},
+  {n:'Shambhavi',     chain:'能量',pos:'tail',est:21},
+  {n:'Shoonya',       free:1,est:20},
+  {n:'Brunch',        anchor:'10:00',est:40,soft:1},
+  {n:'Work',          free:1,est:270,soft:1},
+  {n:'Shoonya',       free:1,est:20},
+  {n:'Presence Time', chain:'晚',pos:'head',est:60,soft:1},
+  {n:'Dinner',        chain:'晚',pos:'tail',anchor:'19:00',est:40,soft:1},
+ ];
+ const H=38;
+ LIST.forEach((p,i)=>{
+   const first=!!p.next;
+   S.appendChild(E('rect',{x:X,y,width:W,height:H,rx:5,
+     fill:first?'rgba(255,90,60,.10)':'none',
+     stroke:first?'#7a3626':'#232932','stroke-width':first?1.4:1,
+     'stroke-dasharray':first?'':'4 4'}));
+   S.appendChild(E('text',{x:X+12,y:y+H/2+4.5,
+     fill:first?'#ffb0a0':(p.soft?'#454c57':'#5b636e'),'font-size':12.5,
+     'font-weight':first?500:400},p.n));
+
+   /* 右側：錨點寫固定時刻，其餘寫預估 */
+   S.appendChild(E('text',{x:X+W-12,y:y+H/2+4.5,
+     fill:p.anchor?GOLD:(first?'#c9836f':'#3f4652'),'font-size':10.5,'text-anchor':'end'},
+     p.anchor?`${p.anchor} 固定`:`預估 ${DUR(p.est)}`));
+
+   /* 鏈的豎線 / 自由標記 */
+   if(p.chain){
+     const top=p.pos==='head';
+     S.appendChild(E('line',{x1:CH,y1:top?y+9:y-3,x2:CH,y2:p.pos==='tail'?y+H-9:y+H+3,
+       stroke:'#4d5460','stroke-width':1.4}));
+     if(top){S.appendChild(E('line',{x1:CH,y1:y+9,x2:CH+7,y2:y+9,stroke:'#4d5460','stroke-width':1.4}));
+       S.appendChild(E('text',{x:CH-4,y:y+H/2+4,fill:'#4d5460','font-size':10,
+         'text-anchor':'end','writing-mode':'vertical-rl'},p.chain))}
+     if(p.pos==='tail')S.appendChild(E('line',{x1:CH,y1:y+H-9,x2:CH+7,y2:y+H-9,
+       stroke:'#4d5460','stroke-width':1.4}));
+   } else if(p.free){
+     S.appendChild(E('text',{x:CH+2,y:y+H/2+4,fill:'#3f4652','font-size':9.5,
+       'text-anchor':'middle'},'隨'));
+   }
+   if(first)S.appendChild(E('text',{x:X+W-12,y:y+H+14,fill:'#6b7480','font-size':10.5,
+     'text-anchor':'end'},'鏈進行中　·　點一下記錄 ↓'));
+   y+=H+(first?22:6);
+ });
+})();
+
+/* ══ B：鏈被打斷 ══ */
+(function(){
+ const S=document.getElementById('b');
+ const REC=[
+  {n:'Awake · 躺床',a:'7:40',b:'8:20',f:.2,soft:1},
+  {n:'Guru Pooja',  a:'8:30',b:'8:47',f:.5,chain:'早課',pos:'head'},
+  {n:'Maha Chanting',a:'8:47',b:'9:05',f:.4,chain:'早課',pos:'tail'},
+  {n:'Surya Kriya', a:'9:10',b:'9:55',f:.85,chain:'體式',pos:'head'},
+  {n:'Brunch',      a:'10:00',b:'10:45',f:.4,soft:1,anchor:1,breaks:'體式'},
+  {n:'Yogasana',    a:'11:10',b:'11:45',f:.6,chain:'體式',pos:'tail'},
+  {n:'Shakti Chalana',a:'14:20',b:'14:50',f:.75,chain:'能量',pos:'head'},
+  {n:'Shambhavi',   a:'14:50',b:'15:12',f:.8,chain:'能量',pos:'tail'},
+ ];
+ let y=10,prev=null;
+ REC.forEach(o=>{
+   const A=M(o.a),B=M(o.b),d=B-A;
+   if(prev!=null){
+     const g=A-prev;
+     if(g>=18){
+       const h=26+Math.min(20,Math.sqrt(g)*1.4);
+       S.appendChild(E('path',{d:`M${X+6} ${y+h/2-4}l8 -5 l8 10 l8 -10 l8 10 l8 -5`,
+         fill:'none',stroke:'#2a303a','stroke-width':1.3}));
+       S.appendChild(E('text',{x:X+62,y:y+h/2+4,fill:'#4a515c','font-size':10.5},`空 ${DUR(g)}`));
+       /* 鏈跨過空白：虛線續接 */
+       if(o.chain&&o.pos==='tail')
+         S.appendChild(E('line',{x1:CH,y1:y-3,x2:CH,y2:y+h+3,stroke:'#4d5460','stroke-width':1.4,
+           'stroke-dasharray':'3 4'}));
+       y+=h;
+     } else if(g>0) y+=g*1.02;
+   }
+   const h=Math.max(d*1.02,17);
+   S.appendChild(E('rect',{x:X,y,width:W,height:h,rx:5,
+     fill:o.soft?'rgba(154,164,178,.14)':COL(o.f)}));
+   if(o.anchor)S.appendChild(E('rect',{x:X,y,width:3,height:h,rx:1.5,fill:GOLD}));
+   S.appendChild(E('text',{x:X+12,y:y+15,fill:o.soft?'#9aa4b2':'#fff','font-size':12.5,
+     'font-weight':500},o.n));
+   if(h>34)S.appendChild(E('text',{x:X+12,y:y+31,fill:'rgba(255,255,255,.6)','font-size':10.5},
+     `${o.a} → ${o.b}　${DUR(d)}`));
+   else S.appendChild(E('text',{x:X+W-11,y:y+15,fill:'rgba(255,255,255,.5)','font-size':10.5,
+     'text-anchor':'end'},DUR(d)));
+
+   if(o.chain){
+     const top=o.pos==='head';
+     S.appendChild(E('line',{x1:CH,y1:top?y+9:y-3,x2:CH,y2:o.pos==='tail'?y+h-9:y+h+3,
+       stroke:'#5c6572','stroke-width':1.4}));
+     if(top)S.appendChild(E('line',{x1:CH,y1:y+9,x2:CH+7,y2:y+9,stroke:'#5c6572','stroke-width':1.4}));
+     if(o.pos==='tail')S.appendChild(E('line',{x1:CH,y1:y+h-9,x2:CH+7,y2:y+h-9,
+       stroke:'#5c6572','stroke-width':1.4}));
+   }
+   /* 打斷標記 */
+   if(o.breaks){
+     S.appendChild(E('line',{x1:CH,y1:y-3,x2:CH,y2:y+h+3,stroke:'#4d5460','stroke-width':1.4,
+       'stroke-dasharray':'3 4'}));
+     S.appendChild(E('line',{x1:CH-6,y1:y+h/2-3,x2:CH+6,y2:y+h/2+3,stroke:'#0b0d11','stroke-width':5}));
+     S.appendChild(E('line',{x1:CH-5,y1:y+h/2-3,x2:CH+5,y2:y+h/2+3,stroke:'#c9737f','stroke-width':1.4}));
+     S.appendChild(E('text',{x:X+W-11,y:y+h-9,fill:'#c9737f','font-size':10,'text-anchor':'end'},
+       '體式串在此斷開'));
+   }
+   prev=B; y+=h+3;
+ });
+
+ /* 底部小結 */
+ y+=14;
+ S.appendChild(E('line',{x1:X,y1:y,x2:X+W,y2:y,stroke:'#1e232c','stroke-width':1}));
+ y+=22;
+ [['早課','一氣呵成','#34d399'],['體式','斷成兩段　中隔 1h15','#c9737f'],
+  ['能量','一氣呵成','#34d399']].forEach(([a,b,c])=>{
+   S.appendChild(E('text',{x:X,y,fill:'#7a828e','font-size':11.5},a));
+   S.appendChild(E('text',{x:X+W,y,fill:c,'font-size':11.5,'text-anchor':'end'},b));
+   y+=22;
+ });
+})();
+</script>
+</body>
+</html>
