@@ -16,9 +16,10 @@
 ## 檔案結構（垂直分割）
 | 檔案 | 職責 |
 |---|---|
-| `index.html` | 外殼＋底部 7 分頁導覽；內容全由 app.js／sadhana.js 注入 `#view` |
+| `index.html` | 外殼＋底部 7 分頁導覽；內容全由 app.js／sadhana.js／note.js 注入 `#view` |
 | `app.js` | 分頁邏輯；一分頁一節（見下表），`grep '===='` 得節索引 |
 | `sadhana.js` | Sadhana 修練頁（不佔分頁，從首頁卡進入）；對外只露 `window.SADHANA` |
+| `note.js` | 備忘錄（列表＝首頁下方區塊，編輯頁不佔分頁）；可插入省思格式（面向讀 `DB.reflect.aspects`，游標在塊內＝縮成可捲的小視窗、在塊外＝收成點列）；對外只露 `window.NOTE` |
 | `styles.css` | 頂部 `:root` 設計變數層（改設計從這裡）＋依元件／分頁分節 |
 | `tokens.json` | 設計 token，與 Figma 來回的交換格式 |
 | `sw.js`／`manifest.webmanifest`／`icons/` | PWA 離線快取與安裝設定 |
@@ -28,7 +29,7 @@
 |---|---|
 | 資料層 | schema 權威＝`seedDB()`；`loadDB()` 負責舊資料相容（已下架欄位 `timeline`／`program`／`calendar`／`goals` 保留為空陣列） |
 | 路由 | `go(tab)` 切分頁，查 `RENDERERS` 表呼叫各節的 render |
-| 首頁 Journal | 日期＋三張入口卡；Sadhana 卡顯示 `window.SADHANA.homeSummary()` 的即時狀態與 CTA，點卡進修練頁；Physics／Journal 待接資料；⚙️ 進設定 |
+| 首頁 Journal | 日期＋三張入口卡＋下方備忘錄區塊；Sadhana 卡顯示 `window.SADHANA.homeSummary()` 的即時狀態與 CTA，點卡進修練頁；Journal 卡顯示 `window.NOTE.homeSummary()`（今天那則），點卡直接進編輯頁；備忘錄區塊的 HTML／事件全由 `window.NOTE.homeSection()`＋`wireHome()` 提供；Physics 待接資料；⚙️ 進設定 |
 | 訓練日誌 Log | 記錄訓練：範本開場、帶入上次數字、存檔自動更新 PR |
 | 技能 Skills | 內建街健技能樹逐階段解鎖＋自訂技能 |
 | 紀錄 PR | 個人最佳（次數／秒數／負重）＋成長曲線 |
@@ -36,7 +37,7 @@
 | 設定／備份 | 匯出／匯入 JSON；從首頁 ⚙️ 進入（無獨立分頁） |
 | 回顧 Review | 週／月／年／全部統計、頻率熱力圖、PR 與體重亮點 |
 | 共用 UI | Sheet 彈窗、SVG 折線圖、空狀態 |
-| 省思 Reflect | 每日書寫編輯器：自由文字＋可插入的互動省思格式表格 |
+| 省思 Reflect | 每日書寫編輯器：自由文字＋可插入的互動省思格式表格；`DB.reflect.aspects`＝面向權威，備忘錄的省思格式也讀同一份 |
 | 啟動 | 首次渲染＋SW 註冊（localhost 跳過並清掉 SW） |
 
 ## 文件地圖（冷讀順序）
@@ -49,6 +50,7 @@
 - **Figma 設計要落地** → 慣例 §設計分工；純色調走 `tokens.json`。
 - **改某分頁的功能** → 上方節地圖挑節 → `app.js` grep 該節標題。
 - **改 Sadhana 修練頁** → `sadhana.js`（自成一檔，與 `app.js` 只透過 `window.SADHANA` 相接）。
+- **改備忘錄／自由書寫頁** → `note.js`（自成一檔，只透過 `window.NOTE` 相接）；長相在 `styles.css` §備忘錄 Note 與 `:root` 的 `--nt-*`。
 - **資料存了什麼／格式** → `app.js` §資料層 `seedDB()`（schema 權威）。
 - **備份／換手機** → `app.js` §設定／備份；使用者操作說明在 `README.md`。
 - **新增分頁** → 慣例 §新增分頁。

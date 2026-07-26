@@ -1,11 +1,12 @@
 /* 街健日誌 Service Worker — 離線快取 */
-const CACHE = 'streetlog-v9';
+const CACHE = 'streetlog-v10';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './sadhana.js',
+  './note.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

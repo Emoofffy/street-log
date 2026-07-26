@@ -87,6 +87,7 @@ function seedDB() {
     goals: [],          // (已停用，保留向後相容)
     calendar: [],       // (已停用，保留向後相容)
     program: [],        // (已停用，保留向後相容)
+    notes: [],          // 備忘錄（自由書寫，見 note.js）：{id,html,created,updated}
     reflect: {          // 每日省思：固定一套可編輯面向 + 每天一則
       aspects: REFLECT_ASPECTS_DEFAULT.map(a => ({ ...a })),
       entries: [],      // {date,notes:{aspectId:text},updated}
@@ -149,6 +150,12 @@ function renderHome() {
     + (sd.pending ? `<br><span class="jr-pend">${sd.pending} 筆待補</span>` : '');
   if (sd && sd.up && !sd.running && sd.next) sdCta = `▶　${sd.next}`;
 
+  // Journal 卡＝今天那則備忘錄，點下去直接進編輯（note.js 提供狀態）
+  const nt = window.NOTE ? window.NOTE.homeSummary() : null;
+  const ntSub = nt && nt.written
+    ? `${esc(nt.first)}<br><span class="jr-note-when">${nt.when} · ${nt.chars} 字</span>`
+    : '今天還沒寫';
+
   view.innerHTML = `
     <div class="row between" style="margin-top:4px">
       <h1 class="jr-title">Journal</h1>
@@ -170,13 +177,17 @@ function renderHome() {
       </div>
       <div class="jr-card sm journal" id="jr-journal">
         <div class="jr-c-title">Journal</div>
-        <div class="jr-c-sub">Daily Parameters</div>
+        <div class="jr-c-sub">${ntSub}</div>
       </div>
     </div>
+
+    ${window.NOTE ? window.NOTE.homeSection() : ''}
   `;
 
   $('#btn-settings').onclick = openSettings;
   $('#jr-sadhana').onclick = () => window.SADHANA && window.SADHANA.open();
+  $('#jr-journal').onclick = () => window.NOTE && window.NOTE.open();   // 不帶 id＝今天那則
+  if (window.NOTE) window.NOTE.wireHome();
   const sdCtaEl = $('#jr-sd-cta');
   if (sdCtaEl) sdCtaEl.onclick = e => { e.stopPropagation(); window.SADHANA.cta(); };
 }
