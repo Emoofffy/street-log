@@ -43,7 +43,8 @@ function toast(msg) {
 }
 
 /* ============================================================
-   資料層
+   資料層 — schema 權威＝seedDB()；存 localStorage['streetlog.v1']；
+   loadDB() 負責舊資料相容（含已下架的 timeline）
    ============================================================ */
 const KEY = 'streetlog.v1';
 
@@ -111,7 +112,7 @@ function saveDB() {
 }
 
 /* ============================================================
-   路由
+   路由 — go(tab) 切分頁，查 RENDERERS 表（見 §啟動）呼叫各節 render
    ============================================================ */
 let CURRENT = 'home';
 let REFLECT_DATE = todayISO();   // 省思分頁目前檢視的日期
@@ -128,7 +129,7 @@ function go(tab) {
 $$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
 
 /* ============================================================
-   首頁 Dashboard
+   首頁 Journal — 日期＋三張入口卡（內容待接資料）；⚙️ 進設定
    ============================================================ */
 function renderHome() {
   const now = new Date();
@@ -284,7 +285,7 @@ function recentPRcard() {
 }
 
 /* ============================================================
-   訓練日誌 Log
+   訓練日誌 Log — 記錄訓練：範本開場、帶入上次數字、存檔自動更新 PR
    ============================================================ */
 function renderLog() {
   const list = [...DB.workouts].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
@@ -555,7 +556,7 @@ function autoUpdatePRs(w) {
 }
 
 /* ============================================================
-   技能 Skills
+   技能 Skills — 內建街健技能樹逐階段解鎖＋自訂技能
    ============================================================ */
 function renderSkills() {
   view.innerHTML = `
@@ -669,7 +670,7 @@ function openCustomSkill() {
 }
 
 /* ============================================================
-   紀錄 PR
+   紀錄 PR — 個人最佳（次數／秒數／負重）＋成長曲線
    ============================================================ */
 function renderPR() {
   const list = DB.prs.filter(p => p.history.length).sort((a, b) => bestOf(b) === bestOf(a) ? 0 : 1);
@@ -778,7 +779,7 @@ function openPRSheet(id) {
 }
 
 /* ============================================================
-   身體 Body & 課表 Program
+   身體 Body & 課表 Program — 體重體脂趨勢＋每週課表範本（首頁本週計畫的資料來源）
    ============================================================ */
 function renderBody() {
   const body = [...DB.body].sort((a, b) => b.date.localeCompare(a.date));
@@ -915,7 +916,7 @@ function openTemplateSheet(id) {
 }
 
 /* ============================================================
-   設定 / 備份
+   設定 / 備份 — 匯出／匯入 JSON；從首頁 ⚙️ 進入（無獨立分頁）
    ============================================================ */
 function openSettings() {
   openSheet(`
@@ -1453,7 +1454,7 @@ function openReflectAspectSheet() {
 }
 
 /* ============================================================
-   啟動
+   啟動 — 首次渲染＋SW 註冊（localhost 跳過並清掉 SW）
    ============================================================ */
 const RENDERERS = { home: renderHome, log: renderLog, skills: renderSkills, pr: renderPR, body: renderBody, review: renderReview, reflect: renderReflect };
 go('home');
