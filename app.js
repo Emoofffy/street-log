@@ -121,6 +121,7 @@ const view = $('#view');
 
 function go(tab) {
   CURRENT = tab;
+  document.body.dataset.tab = tab;              // 讓 CSS 認得目前分頁（封面用純黑底）
   $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
   RENDERERS[tab]();
   view.scrollTop = 0;
@@ -130,15 +131,31 @@ function go(tab) {
 $$('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
 
 /* ============================================================
-   首頁 Journal — 日期＋三張入口卡（內容待接資料）；⚙️ 進設定
+   首頁 Journal（封面）— 依 iOS HIG 規格：大標題列＋群組列表目標＋入口方塊；⚙️ 進設定
+   規格數值全住 styles.css §蘋果設計規格；這裡只負責結構與資料
    ============================================================ */
+
+/* SF Symbols 的替身：chevron.right（列尾箭頭）與 gear（設定） */
+const icoChevron = () => `<svg class="cv-chev" viewBox="0 0 8 13" width="8" height="13" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true"><path d="M1.4 1.4 6.6 6.5 1.4 11.6"/></svg>`;
+const icoGear = () => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="12" cy="12" r="3.1"/>
+  <path d="M19.3 14.9a1.6 1.6 0 0 0 .32 1.77l.06.06a1.94 1.94 0 1 1-2.74 2.74l-.06-.06a1.6 1.6 0 0 0-1.77-.32
+   1.6 1.6 0 0 0-.97 1.47v.17a1.94 1.94 0 1 1-3.88 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06
+   a1.94 1.94 0 1 1-2.74-2.74l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.3a1.94 1.94 0 1 1 0-3.88h.09
+   A1.6 1.6 0 0 0 4.86 9.1a1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.94 1.94 0 1 1 2.74-2.74l.06.06a1.6 1.6 0 0 0 1.77.32h.08
+   a1.6 1.6 0 0 0 .97-1.47V3.3a1.94 1.94 0 1 1 3.88 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06
+   a1.94 1.94 0 1 1 2.74 2.74l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.94 1.94 0 1 1 0 3.88h-.09
+   a1.6 1.6 0 0 0-1.47.97z"/></svg>`;
+
 function renderHome() {
   const now = new Date();
   const wdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-  const dateSm = `${now.getMonth() + 1}月${now.getDate()}`;
-  const dateLg = wdays[now.getDay()];
+  const dateLine = `${now.getMonth() + 1}月${now.getDate()}日　${wdays[now.getDay()]}`;
 
-  // Sadhana 卡即時狀態（sadhana.js 提供）
+  // Sadhana 方塊即時狀態（sadhana.js 提供）
   const sd = window.SADHANA ? window.SADHANA.homeSummary() : null;
   let sdSub, sdCta = '';
   if (!sd) sdSub = '每日修練';
@@ -150,20 +167,22 @@ function renderHome() {
     + (sd.pending ? `<br><span class="jr-pend">${sd.pending} 筆待補</span>` : '');
   if (sd && sd.up && !sd.running && sd.next) sdCta = `▶　${sd.next}`;
 
-  // Journal 卡＝今天那則備忘錄，點下去直接進編輯（note.js 提供狀態）
+  // Journal 方塊＝今天那則備忘錄，點下去直接進編輯（note.js 提供狀態）
   const nt = window.NOTE ? window.NOTE.homeSummary() : null;
   const ntSub = nt && nt.written
     ? `${esc(nt.first)}<br><span class="jr-note-when">${nt.when} · ${nt.chars} 字</span>`
     : '今天還沒寫';
 
   view.innerHTML = `
-    <div class="row between" style="margin-top:4px">
-      <h1 class="jr-title">Journal</h1>
-      <button class="btn icon ghost" id="btn-settings" aria-label="設定" style="margin-top:-4px">⚙️</button>
-    </div>
+    <header class="cv-head">
+      <div class="cv-date">${dateLine}</div>
+      <div class="cv-title-row">
+        <h1 class="cv-title">Journal</h1>
+        <button class="cv-gear" id="btn-settings" aria-label="設定">${icoGear()}</button>
+      </div>
+    </header>
 
-    <div class="jr-date-sm">${dateSm}</div>
-    <div class="jr-date-lg">${dateLg}</div>
+    ${renderGoals()}
 
     <div class="jr-cards">
       <div class="jr-card big${sd && sd.running ? ' running' : ''}" id="jr-sadhana">
@@ -190,9 +209,100 @@ function renderHome() {
   if (window.NOTE) window.NOTE.wireHome();
   const sdCtaEl = $('#jr-sd-cta');
   if (sdCtaEl) sdCtaEl.onclick = e => { e.stopPropagation(); window.SADHANA.cta(); };
+  wireGoals();
 }
 
-/* ---------- 本週計畫（一眼看出本週還缺什麼） ---------- */
+/* ---------- 目標條：本日／本週還缺什麼，全部從既有資料推算，不必另外設定 ----------
+   本日＝今天該做的幾件事（修練、今天排的課表、書寫）；本週＝課表完成度
+   每一列都是 44pt 可點的，點下去就去做那件事                                   */
+function todayWeekday() { return WEEKDAYS[(new Date().getDay() + 6) % 7]; }
+
+function dayGoalItems() {
+  const items = [];
+  const sd = window.SADHANA ? window.SADHANA.homeSummary() : null;
+  if (sd && sd.total) items.push({
+    name: '修練', done: sd.done >= sd.total,
+    val: sd.running ? '進行中' : `${sd.done}/${sd.total}`, act: 'sadhana',
+  });
+
+  const wd = todayWeekday(), t0 = todayISO();
+  const todayWorkouts = DB.workouts.filter(w => w.date === t0);
+  const todayTpls = DB.templates.filter(t => t.day === wd);
+  if (todayTpls.length) {
+    todayTpls.forEach(t => {
+      const done = todayWorkouts.some(w => w.fromTemplate === t.id);
+      items.push({ name: t.name, done, val: `${t.exercises.length} 動作`, act: 'tpl', tpl: t.id });
+    });
+  } else if (todayWorkouts.length) {
+    // 今天沒排課表但真的練了：也算一項已完成，別讓努力消失在畫面外
+    items.push({ name: todayWorkouts[0].name || '訓練', done: true, val: '', act: 'log' });
+  }
+
+  const nt = window.NOTE ? window.NOTE.homeSummary() : null;
+  items.push({ name: '書寫', done: !!(nt && nt.written), val: nt && nt.written ? nt.when : '', act: 'note' });
+  return items;
+}
+
+/* 群組列表的一列：勾勾 ＋ 標題 ＋ 右側值 ＋ 箭頭 */
+function goalRow(i) {
+  return `<button class="cv-row" data-act="${i.act}"${i.tpl ? ` data-tpl="${i.tpl}"` : ''}>
+    <span class="cv-mark${i.done ? ' done' : ''}">${i.done ? '✓' : ''}</span>
+    <span class="cv-row-t">${esc(i.name)}</span>
+    ${i.val ? `<span class="cv-row-v">${esc(i.val)}</span>` : ''}
+    ${icoChevron()}
+  </button>`;
+}
+
+function renderGoals() {
+  const items = dayGoalItems();
+  const dDone = items.filter(i => i.done).length;
+  const total = DB.templates.length;
+  const wDone = DB.templates.filter(templateDoneThisWeek).length;
+  const remain = DB.templates.filter(t => !templateDoneThisWeek(t));
+  const pct = total ? Math.round(wDone / total * 100) : 0;
+
+  const week = !total
+    ? `<button class="cv-row" data-act="body">
+         <span class="cv-row-t">還沒排固定課表</span>
+         <span class="cv-row-v">去排一個</span>${icoChevron()}
+       </button>`
+    : `<button class="cv-row col" data-act="body">
+         <span class="cv-bar"><i style="width:${pct}%"></i></span>
+         <span class="cv-row-line">
+           <span class="cv-row-sub">${wDone === total
+             ? '本週課表全部完成'
+             : '還缺　' + remain.map(t => esc(t.name)).join('　·　')}</span>
+           ${icoChevron()}
+         </span>
+       </button>`;
+
+  return `
+    <section class="cv-sec">
+      <div class="cv-sec-hd"><span class="cv-sec-t">今天</span>
+        <span class="cv-sec-v${dDone === items.length ? ' all' : ''}">${dDone} / ${items.length}</span></div>
+      <div class="cv-group">${items.map(goalRow).join('')}</div>
+    </section>
+
+    <section class="cv-sec">
+      <div class="cv-sec-hd"><span class="cv-sec-t">本週課表</span>
+        ${total ? `<span class="cv-sec-v${wDone === total ? ' all' : ''}">${wDone} / ${total}</span>` : ''}</div>
+      <div class="cv-group">${week}</div>
+    </section>`;
+}
+
+function wireGoals() {
+  $$('.cv-row[data-act]').forEach(r => r.onclick = () => {
+    switch (r.dataset.act) {
+      case 'sadhana': window.SADHANA && window.SADHANA.open(); break;
+      case 'note':    window.NOTE && window.NOTE.open(); break;
+      case 'tpl':     openWorkoutSheet(null, r.dataset.tpl); break;
+      case 'log':     go('log'); break;
+      case 'body':    go('body'); break;                    // 去排／改課表
+    }
+  });
+}
+
+/* ---------- 本週課表完成度的算法（目標條與回顧共用） ---------- */
 function weekStartISO() {
   const d = new Date(todayISO() + 'T00:00:00');
   const day = (d.getDay() + 6) % 7;           // 週一為一週開始
@@ -203,38 +313,6 @@ function templateDoneThisWeek(t) {
   const ws = weekStartISO();
   return DB.workouts.some(w => w.fromTemplate === t.id && w.date >= ws);
 }
-function renderWeekPlan() {
-  if (!DB.templates.length) {
-    return `<div class="section-title">本週計畫</div>
-      <div class="card tap" id="setup-plan"><div class="row between">
-        <div><h3 style="margin:0">🗓️ 建立你的固定課表</h3>
-          <div class="muted" style="font-size:13px">例如 A 日 / B 日，之後一鍵開始、自動追蹤每週進度</div></div>
-        <span style="font-size:22px">＋</span></div></div>`;
-  }
-  const done = DB.templates.filter(templateDoneThisWeek).length;
-  const total = DB.templates.length;
-  const pct = Math.round(done / total * 100);
-  const remain = DB.templates.filter(t => !templateDoneThisWeek(t));
-  return `<div class="section-title">本週計畫 · ${done}/${total} 完成</div>
-    <div class="card">
-      <div class="row between" style="margin-bottom:6px">
-        <b style="font-size:14px;color:${done === total ? 'var(--accent-2)' : 'var(--text)'}">
-          ${done === total ? '🎉 本週課表全部完成！' : '還缺：' + remain.map(t => esc(t.name)).join('、')}</b>
-        <span class="muted" style="font-size:13px">${pct}%</span></div>
-      <div class="pbar"><i style="width:${pct}%"></i></div>
-    </div>
-    ${DB.templates.map(t => {
-      const d = templateDoneThisWeek(t);
-      return `<div class="card"><div class="row between">
-        <div class="row" style="gap:12px"><span style="font-size:22px;${d ? '' : 'filter:none'}">${t.icon || '📋'}</span>
-          <div><b style="font-size:15px;color:${d ? 'var(--text-dim)' : 'var(--text)'}">${esc(t.name)}</b>
-            <div class="faint" style="font-size:12px">${t.day ? esc(t.day) + ' · ' : ''}${t.exercises.length} 動作</div></div></div>
-        ${d ? '<span class="tag green">✓ 本週完成</span>'
-            : `<button class="btn primary sm wk-start" data-tpl="${t.id}">▶ 開始</button>`}
-      </div></div>`;
-    }).join('')}`;
-}
-
 function greeting() {
   const h = new Date().getHours();
   if (h < 6) return '深夜還在練';

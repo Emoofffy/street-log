@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "街健日誌",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8734"],
-      "port": 8734
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "python3 -m http.server \"$PORT\""],
+      "port": 8734,
+      "autoPort": true
     }
   ]
 }

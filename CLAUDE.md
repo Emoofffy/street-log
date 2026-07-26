@@ -20,7 +20,7 @@
 | `app.js` | 分頁邏輯；一分頁一節（見下表），`grep '===='` 得節索引 |
 | `sadhana.js` | Sadhana 修練頁（不佔分頁，從首頁卡進入）；對外只露 `window.SADHANA` |
 | `note.js` | 備忘錄（列表＝首頁下方區塊，編輯頁不佔分頁）；可插入省思格式（面向讀 `DB.reflect.aspects`，游標在塊內＝縮成可捲的小視窗、在塊外＝收成點列）；對外只露 `window.NOTE` |
-| `styles.css` | 頂部 `:root` 設計變數層（改設計從這裡）＋依元件／分頁分節 |
+| `styles.css` | 頂部 `:root` 設計變數層（改設計從這裡；`--ap-*` 是照抄 iOS HIG 的規格值，不是自由發揮區）＋依元件／分頁分節 |
 | `tokens.json` | 設計 token，與 Figma 來回的交換格式 |
 | `sw.js`／`manifest.webmanifest`／`icons/` | PWA 離線快取與安裝設定 |
 
@@ -29,7 +29,7 @@
 |---|---|
 | 資料層 | schema 權威＝`seedDB()`；`loadDB()` 負責舊資料相容（已下架欄位 `timeline`／`program`／`calendar`／`goals` 保留為空陣列） |
 | 路由 | `go(tab)` 切分頁，查 `RENDERERS` 表呼叫各節的 render |
-| 首頁 Journal | 日期＋三張入口卡＋下方備忘錄區塊；Sadhana 卡顯示 `window.SADHANA.homeSummary()` 的即時狀態與 CTA，點卡進修練頁；Journal 卡顯示 `window.NOTE.homeSummary()`（今天那則），點卡直接進編輯頁；備忘錄區塊的 HTML／事件全由 `window.NOTE.homeSection()`＋`wireHome()` 提供；Physics 待接資料；⚙️ 進設定 |
+| 首頁 Journal（封面） | 依 iOS HIG 做：大標題列＋兩個群組列表（今天／本週課表）＋三個入口方塊＋下方備忘錄區塊；規格值住 `styles.css` 的 `--ap-*`，`body[data-tab="home"]` 才套系統群組黑底；目標（`renderGoals()`）全部從既有資料推算、不必另外設定：本日＝修練／今天排的課表／書寫，本週＝課表完成度（`templateDoneThisWeek()`），每列 44pt 可點、`wireGoals()` 決定點下去去哪；Sadhana 卡顯示 `window.SADHANA.homeSummary()` 的即時狀態與 CTA，點卡進修練頁；Journal 卡顯示 `window.NOTE.homeSummary()`（今天那則），點卡直接進編輯頁；備忘錄區塊的 HTML／事件全由 `window.NOTE.homeSection()`＋`wireHome()` 提供；Physics 待接資料；⚙️ 進設定 |
 | 訓練日誌 Log | 記錄訓練：範本開場、帶入上次數字、存檔自動更新 PR |
 | 技能 Skills | 內建街健技能樹逐階段解鎖＋自訂技能 |
 | 紀錄 PR | 個人最佳（次數／秒數／負重）＋成長曲線 |
@@ -58,7 +58,7 @@
 - **要寫／改文件** → `docs/DOC-STYLE.md`。
 
 ## 慣例
-- **本機開發**：`.claude/launch.json` 跑 `python3 -m http.server 8734`；localhost 自動跳過並清掉 Service Worker，改 CSS 不會被舊快取卡住（正式部署網址才啟用離線快取）。改完前端用瀏覽器 preview 開 <http://localhost:8734> 驗證，不叫使用者自己看。
+- **本機開發**：`.claude/launch.json` 跑 `python3 -m http.server $PORT`（`autoPort` 開著＝8734 被佔用就自動換一個 port，實際網址看 preview_start 回傳的）；localhost 自動跳過並清掉 Service Worker，改 CSS 不會被舊快取卡住（正式部署網址才啟用離線快取）。改完前端用瀏覽器 preview 開起來驗證，不叫使用者自己看。
 - **設計分工**：使用者在 Figma／`styles.css` 變數層決定長相、動態、跳頁；agent 把它實作成會動的程式碼。`color-mix()` 衍生色必配 `@property` 註冊（`syntax:'<color>'`），不註冊會被算成透明。
 - **新增分頁**：`index.html` tabbar 加鈕 → `app.js` §路由 `RENDERERS` 加一項 → 開新節寫 `renderX()` → 本檔節地圖加一行。刪分頁反向操作，並照 DOC-STYLE 清死引用。
 - **資料相容**：改 schema 只加欄位不改名；舊欄位下架先保留讀取相容（見 §資料層 timeline 例）。不得毀掉使用者既有的 localStorage 資料。
